@@ -20,6 +20,24 @@ server_filter_tags = {}
 
 configuration_options = {
   {
+    name = "Damage",
+    label = "武器伤害",
+    options = {
+      { description = "15", data = 15 },
+      { description = "20", data = 20 },
+      { description = "25", data = 25 },
+      { description = "28", data = 28 },
+      { description = "32", data = 32 },
+      { description = "42", data = 42 },
+      { description = "52", data = 52 },
+      { description = "62", data = 62 },
+      { description = "72", data = 72 },
+      { description = "82", data = 82 },
+      { description = "102", data = 102 },
+    },
+    default = 32
+  },
+  {
     name = "Range",
     label = "射程",
     options = {
