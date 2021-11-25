@@ -3,16 +3,17 @@ description = [[
 森域 X 海域
 ]]
 author = "猪猪"
-version = "1.0"
+version = "1.1"
 forumthread = ""
-dst_compatible = false --兼容联机
-dont_starve_compatible = true --不兼容单机
-reign_of_giants_compatible = true --不兼容巨人
-shipwrecked_compatible = true
+dst_compatible = true --兼容联机
+dont_starve_compatible = false --不兼容单机
+reign_of_giants_compatible = false --不兼容巨人
+shipwrecked_compatible = false
 
+client_only_mod = false
 all_clients_require_mod = true --所有人mod
 
-api_version = 6
+api_version = 10
 
 icon_atlas = "modicon.xml"
 icon = "modicon.tex"
@@ -23,6 +24,7 @@ configuration_options = {
     name = "Damage",
     label = "武器伤害",
     options = {
+      { description = "11", data = 11 },
       { description = "15", data = 15 },
       { description = "20", data = 20 },
       { description = "25", data = 25 },
@@ -34,6 +36,9 @@ configuration_options = {
       { description = "72", data = 72 },
       { description = "82", data = 82 },
       { description = "102", data = 102 },
+      { description = "222", data = 222 },
+      { description = "552", data = 552 },
+      { description = "1002", data = 1002 },
     },
     default = 32
   },
@@ -41,13 +46,17 @@ configuration_options = {
     name = "Range",
     label = "射程",
     options = {
+      { description = "0.75", data = 0.75 },
+      { description = "1.25", data = 1.25 },
       { description = "1.75", data = 1.75 },
+      { description = "2", data = 2 },
       { description = "4", data = 4 },
       { description = "6", data = 6 },
       { description = "8", data = 8 },
       { description = "10", data = 10 },
       { description = "12", data = 12 },
       { description = "14", data = 14 },
+      { description = "16", data = 16 },
     },
     default = 6
   },

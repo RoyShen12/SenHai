@@ -104,12 +104,12 @@ local function fn()
 
   -- inst.entity:SetPristine()
 
-  -- if not TheWorld.ismastersim then
-  --   return inst
-  -- end
+  if not TheWorld.ismastersim then
+    return inst
+  end
 
   inst:AddComponent("weapon") --增加武器组件 有了这个才可以打人
-  inst.components.weapon:SetDamage(TUNING.SenHai.damage) --设置伤害34
+  inst.components.weapon:SetDamage(TUNING.SenHai.damage)
 
   inst.components.weapon:SetRange(TUNING.SenHai.range, TUNING.SenHai.range + 2)
   inst.components.weapon:SetProjectile("ice_projectile")
@@ -149,4 +149,5 @@ local function fn()
 
   return inst
 end
+
 return Prefab("senhai", fn, assets, {})
