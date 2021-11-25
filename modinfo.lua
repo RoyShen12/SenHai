@@ -69,8 +69,7 @@ configuration_options = {
   },
   {
     name = "StormRange",
-    label = "触发风暴时覆盖的范围",
-    hover = "触发目标周围多远的敌人会被 AOE 攻击",
+    label = "风暴的范围",
     options = {
       { description = "1.5", data = 1.5 },
       { description = "2", data = 2 },
@@ -86,7 +85,7 @@ configuration_options = {
   {
     name = "StormDamageRatio",
     label = "风暴 AOE 伤害倍率",
-    hover = "风暴范围内的敌人受到伤害相对于触发目标的比例",
+    hover = "风暴伤害相对于主目标的比例",
     options = {
       { description = "10%", data = 0.1 },
       { description = "20%", data = 0.2 },
