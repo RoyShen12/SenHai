@@ -25,6 +25,66 @@ local function CreateLight()
   return inst
 end
 
+local PickUpMustTags = {"_inventoryitem"}
+local PickUpCanTags = {
+  "INLIMBO",
+  "NOCLICK",
+  "knockbackdelayinteraction",
+  "catchable",
+  "fire",
+  "minesprung",
+  "mineactive",
+  "spider"
+}
+local PickUpRange = 10
+local PickUpCD = 0.1
+
+local function pickup(inst, owner)
+  if owner == nil or owner.components.inventory == nil then
+    return
+  end
+
+  local x, y, z = owner.Transform:GetWorldPosition()
+  local ents = TheSim:FindEntities(x, y, z, PickUpRange, PickUpMustTags, PickUpCanTags)
+
+  local ba = owner:GetBufferedAction()
+
+  for i, v in ipairs(ents) do
+    if
+      v.components.inventoryitem ~= nil and v.components.inventoryitem.canbepickedup and
+        v.components.inventoryitem.cangoincontainer and
+        not v.components.inventoryitem:IsHeld() and
+        owner.components.inventory:CanAcceptCount(v, 1) > 0 and
+        (ba == nil or ba.action ~= ACTIONS.PICKUP or ba.target ~= v)
+     then
+      if owner.components.minigame_participator ~= nil then
+        local minigame = owner.components.minigame_participator:GetMinigame()
+        if minigame ~= nil then
+          minigame:PushEvent("pickupcheat", {cheater = owner, item = v})
+        end
+      end
+
+      --Amulet will only ever pick up items one at a time. Even from stacks.
+      SpawnPrefab("sand_puff").Transform:SetPosition(v.Transform:GetWorldPosition())
+
+      -- inst.components.finiteuses:Use(1)
+
+      local v_pos = v:GetPosition()
+      if v.components.stackable ~= nil then
+        v = v.components.stackable:Get()
+      end
+
+      if v.components.trap ~= nil and v.components.trap:IsSprung() then
+        v.components.trap:Harvest(owner)
+      else
+        owner.components.inventory:GiveItem(v, nil, v_pos)
+      end
+
+      return
+    end
+  end
+end
+
 local function OnRemoveEntity(inst)
   inst._light:Remove()
 end
@@ -41,11 +101,18 @@ local function onEquip(inst, owner) --装备
   owner.AnimState:OverrideSymbol("swap_object", "swap_senhai", "swap_senhai")
   owner.AnimState:Show("ARM_carry")
   owner.AnimState:Hide("ARM_normal")
+
+  inst.task = inst:DoPeriodicTask(PickUpCD, pickup, nil, owner)
 end
 
 local function onUnequip(inst, owner) --解除装备
   owner.AnimState:Hide("ARM_carry")
   owner.AnimState:Show("ARM_normal")
+
+  if inst.task ~= nil then
+    inst.task:Cancel()
+    inst.task = nil
+  end
 end
 
 local function slowDown(player, target, slow_mult, duration)
