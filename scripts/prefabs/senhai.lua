@@ -36,6 +36,12 @@ local PickUpCanTags = {
   "mineactive",
   "spider"
 }
+local PickUpForbidPrefabs = {
+  trap = true,
+  bridtrap = true,
+  opalstaff = true,
+  yellowstaff = true
+}
 local PickUpRange = 10
 local PickUpCD = 0.1
 
@@ -52,6 +58,8 @@ local function pickup(inst, owner)
   for i, v in ipairs(ents) do
     if
       v.components.inventoryitem ~= nil and v.components.inventoryitem.canbepickedup and
+        v.prefab ~= nil and
+        not PickUpForbidPrefabs[v.prefab] and
         v.components.inventoryitem.cangoincontainer and
         not v.components.inventoryitem:IsHeld() and
         owner.components.inventory:CanAcceptCount(v, 1) > 0 and
