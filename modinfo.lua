@@ -65,6 +65,7 @@ configuration_options = {
     label = "触发风暴几率",
     hover = "对目标周围的敌人造成群体 AOE",
     options = {
+      {description = "0%", data = 0},
       {description = "2%", data = 2},
       {description = "5%", data = 5},
       {description = "10%", data = 10},

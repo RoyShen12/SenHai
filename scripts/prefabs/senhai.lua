@@ -81,7 +81,7 @@ end
 
 local function onattack(inst, attacker, target) -- inst, attacker, target, skipsanity
   --加入冰杖效果
-  inst.SoundEmitter:PlaySound("dontstarve_DLC002/common/obsidian_wetsizzles")
+  -- inst.SoundEmitter:PlaySound("dontstarve_DLC002/common/obsidian_wetsizzles")
 
   if not target:IsValid() then
     return
@@ -91,7 +91,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
   slowDown(attacker, target, 0.7, 2)
 
   -- 熄火
-  if target.components.burnable then
+  if target.components.burnable ~= nil then
     if target.components.burnable:IsBurning() then
       target.components.burnable:Extinguish()
     elseif target.components.burnable:IsSmoldering() then
@@ -104,16 +104,18 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
 
   -- 几率 AOE
   if
-    math.random(0, 100) > (100 - TUNING.SenHai.storm_chance) and
+    TUNING.SenHai.storm_chance > 0 and math.random(0, 100) > (100 - TUNING.SenHai.storm_chance) and
       attacker.components.combat:IsValidTarget(target)
    then
     attacker.components.talker:Say("风暴！")
 
     local x, y, z = target.Transform:GetWorldPosition()
     local ents = TheSim:FindEntities(x, y, z, TUNING.SenHai.storm_range)
+
     for k, v in pairs(ents) do
       if
-        attacker.components.combat:IsValidTarget(v) and v ~= target and v.components.combat and
+        v ~= target and v:IsValid() and v.components.combat and
+          attacker.components.combat:IsValidTarget(v) and
           string.find(v.prefab, "wall") == nil
        then
         v.components.combat:GetAttacked(
