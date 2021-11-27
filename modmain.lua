@@ -29,5 +29,5 @@ Recipe(
     Ingredient("twigs", 10),
   },
   RECIPETABS.WAR,
-  {SCIENCE = 0}
+  TECH.NONE
 ).atlas = "images/inventoryimages/senhai.xml"

@@ -1,15 +1,40 @@
 local assets = {
   Asset("ANIM", "anim/senhai.zip"), --地上的动画
   Asset("ANIM", "anim/swap_senhai.zip"),
-  Asset("ATLAS", "images/inventoryimages/senhai.xml"), --加载物品栏贴图
+  Asset("ATLAS", "images/inventoryimages/senhai.xml") --加载物品栏贴图
 }
 
-local function OnDropped(inst)
+local function CreateLight()
+  local inst = CreateEntity()
+
+  inst:AddTag("FX")
+  inst:AddTag("playerlight")
+  --[[Non-networked entity]]
+  inst.entity:SetCanSleep(false)
+  inst.persists = false
+
+  inst.entity:AddTransform()
+  inst.entity:AddLight()
+
+  inst.Light:SetIntensity(.8)
+  inst.Light:SetColour(215 / 255, 205 / 255, 255 / 255)
+  inst.Light:SetFalloff(.3)
+  inst.Light:SetRadius(2)
   inst.Light:Enable(true)
+
+  return inst
+end
+
+local function OnRemoveEntity(inst)
+    inst._light:Remove()
+end
+
+local function OnDropped(inst)
+  inst._light.Light:Enable(true)
 end
 
 local function OnPutInInventory(inst)
-  inst.Light:Enable(true)
+  inst._light.Light:Enable(true)
 end
 
 local function onEquip(inst, owner) --装备
@@ -24,34 +49,34 @@ local function onUnequip(inst, owner) --解除装备
 end
 
 local function slowDown(player, target, slow_mult, duration)
-	if player and target and player.components.combat:IsValidTarget(target) and target.components.locomotor then
-		if target:HasTag("epic") then
-			slow_mult = 1 - ((1 - slow_mult) * 0.2)
-		end
+  if
+    player and target and player.components.combat:IsValidTarget(target) and
+      target.components.locomotor
+   then
+    if target:HasTag("epic") then
+      slow_mult = 1 - ((1 - slow_mult) * 0.2)
+    end
 
-		target.components.locomotor:SetExternalSpeedMultiplier(player, "senhai", slow_mult)
-		player:DoTaskInTime(
-			duration,
-			function()
-				pcall(
-					function()
-						target.components.locomotor:RemoveExternalSpeedMultiplier(player, "senhai")
-					end
-				)
-			end
-		)
-	end
+    target.components.locomotor:SetExternalSpeedMultiplier(player, "senhai", slow_mult)
+    player:DoTaskInTime(
+      duration,
+      function()
+        pcall(
+          function()
+            target.components.locomotor:RemoveExternalSpeedMultiplier(player, "senhai")
+          end
+        )
+      end
+    )
+  end
 end
 
 local function calcHealthDrain(inst, attacker, target)
-  return (
-    inst.components.weapon.damage * 0.8 +
-    attacker.components.combat.defaultdamage * 0.75 +
-    target.components.combat.defaultdamage * 0.05
-  ) *
-  0.015 *
-  (target:HasTag("epic") and 1.2 or 0.6) *
-  (attacker.components.health:GetPercent() < 0.2 and 1.5 or 1)
+  return (inst.components.weapon.damage * 0.8 + attacker.components.combat.defaultdamage * 0.75 +
+    target.components.combat.defaultdamage * 0.05) *
+    0.015 *
+    (target:HasTag("epic") and 1.2 or 0.6) *
+    (attacker.components.health:GetPercent() < 0.2 and 1.5 or 1)
 end
 
 local function onattack(inst, attacker, target) -- inst, attacker, target, skipsanity
@@ -78,29 +103,29 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
   attacker.components.health:DoDelta(calcHealthDrain(inst, attacker, target))
 
   -- 几率 AOE
-  if math.random(0, 100) > (100 - TUNING.SenHai.storm_chance) and
-    attacker.components.combat:IsValidTarget(target)
-  then
+  if
+    math.random(0, 100) > (100 - TUNING.SenHai.storm_chance) and
+      attacker.components.combat:IsValidTarget(target)
+   then
     attacker.components.talker:Say("风暴！")
 
     local x, y, z = target.Transform:GetWorldPosition()
     local ents = TheSim:FindEntities(x, y, z, TUNING.SenHai.storm_range)
-      for k, v in pairs(ents) do
-        if attacker.components.combat:IsValidTarget(v) and
-          v ~= target and
-          v.components.combat and
+    for k, v in pairs(ents) do
+      if
+        attacker.components.combat:IsValidTarget(v) and v ~= target and v.components.combat and
           string.find(v.prefab, "wall") == nil
-        then
-          v.components.combat:GetAttacked(
-            attacker,
-            attacker.components.combat:CalcDamage(v, inst, TUNING.SenHai.storm_damage_ratio),
-            inst
-          )
-          attacker.components.health:DoDelta(
-            calcHealthDrain(inst, attacker, v) * TUNING.SenHai.storm_damage_ratio * 0.25
-          )
-        end
+       then
+        v.components.combat:GetAttacked(
+          attacker,
+          attacker.components.combat:CalcDamage(v, inst, TUNING.SenHai.storm_damage_ratio),
+          inst
+        )
+        attacker.components.health:DoDelta(
+          calcHealthDrain(inst, attacker, v) * TUNING.SenHai.storm_damage_ratio * 0.25
+        )
       end
+    end
   end
 end
 
@@ -117,6 +142,9 @@ local function fn()
   inst.AnimState:SetBank("senhai") --地上动画
   inst.AnimState:SetBuild("senhai")
   inst.AnimState:PlayAnimation("idle")
+
+  inst._light = CreateLight()
+  inst._light.entity:SetParent(inst.entity)
 
   -- inst:AddTag("sharp") --武器的标签跟攻击方式跟攻击音效有关 没有特殊的话就用这两个
   -- inst:AddTag("pointy")
@@ -151,12 +179,6 @@ local function fn()
 
   inst.components.inventoryitem.atlasname = "images/inventoryimages/senhai.xml" --物品贴图
 
-  local light = inst.entity:AddLight()
-  light:SetFalloff(0.88)
-  light:SetIntensity(.2)
-  light:SetRadius(2)
-  light:SetColour(215 / 255, 205 / 255, 255 / 255)
-  light:Enable(true)
   inst.AnimState:SetBloomEffectHandle("shaders/anim.ksh")
 
   inst.components.inventoryitem:SetOnDroppedFn(OnDropped)
@@ -165,7 +187,9 @@ local function fn()
   inst.components.equippable:SetOnEquip(onEquip)
   inst.components.equippable:SetOnUnequip(onUnequip)
   inst.components.equippable.walkspeedmult = math.floor(TUNING.CANE_SPEED_MULT * 115) / 100
-  inst.components.equippable.dapperness = TUNING.CRAZINESS_MED / 4
+  inst.components.equippable.dapperness = TUNING.DAPPERNESS_HUGE / 4
+
+  inst.OnRemoveEntity = OnRemoveEntity
 
   -- MakeHauntableLaunch(inst)
 
