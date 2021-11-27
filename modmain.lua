@@ -24,10 +24,10 @@ STRINGS.RECIPE_DESC.SENHAI = "铸造一把猪刀" --配方上面的描述
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.SENHAI = "粗~粗~粗~" --人物检查的描述
 
 Recipe(
-  "senhai",
-  {
-    Ingredient("twigs", 10),
-  },
-  RECIPETABS.WAR,
-  TECH.NONE
-).atlas = "images/inventoryimages/senhai.xml"
+    "senhai",
+    {
+      Ingredient("twigs", 10)
+    },
+    RECIPETABS.WAR,
+    TECH.NONE
+  ).atlas = "images/inventoryimages/senhai.xml"

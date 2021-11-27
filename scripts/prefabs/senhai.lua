@@ -26,7 +26,7 @@ local function CreateLight()
 end
 
 local function OnRemoveEntity(inst)
-    inst._light:Remove()
+  inst._light:Remove()
 end
 
 local function OnDropped(inst)
