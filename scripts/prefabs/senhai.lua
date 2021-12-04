@@ -216,9 +216,6 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
     return
   end
 
-  -- 减速
-  slowDown(attacker, target, 0.7, 2)
-
   -- 熄火
   if target.components.burnable ~= nil then
     if target.components.burnable:IsBurning() then
@@ -228,35 +225,36 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
     end
   end
 
-  -- 吸血
   if target.components.combat then
+    -- 吸血
     attacker.components.health:DoDelta(calcHealthDrain(inst, attacker, target))
-  end
+    -- 减速
+    slowDown(attacker, target, 0.7, 2)
+    -- 几率 AOE
+    if
+      TUNING.SenHai.storm_chance > 0 and math.random(0, 100) > (100 - TUNING.SenHai.storm_chance) and
+        attacker.components.combat:IsValidTarget(target)
+     then
+      attacker.components.talker:Say("风暴！")
 
-  -- 几率 AOE
-  if
-    TUNING.SenHai.storm_chance > 0 and math.random(0, 100) > (100 - TUNING.SenHai.storm_chance) and
-      attacker.components.combat:IsValidTarget(target)
-   then
-    attacker.components.talker:Say("风暴！")
+      local x, y, z = target.Transform:GetWorldPosition()
+      local ents = TheSim:FindEntities(x, y, z, TUNING.SenHai.storm_range)
 
-    local x, y, z = target.Transform:GetWorldPosition()
-    local ents = TheSim:FindEntities(x, y, z, TUNING.SenHai.storm_range)
-
-    for k, v in pairs(ents) do
-      if
-        v ~= target and v:IsValid() and v.components.combat and
-          attacker.components.combat:IsValidTarget(v) and
-          string.find(v.prefab, "wall") == nil
-       then
-        v.components.combat:GetAttacked(
-          attacker,
-          attacker.components.combat:CalcDamage(v, inst, TUNING.SenHai.storm_damage_ratio),
-          inst
-        )
-        attacker.components.health:DoDelta(
-          calcHealthDrain(inst, attacker, v) * TUNING.SenHai.storm_damage_ratio * 0.25
-        )
+      for k, v in pairs(ents) do
+        if
+          v ~= target and v:IsValid() and v.components.combat and
+            attacker.components.combat:IsValidTarget(v) and
+            string.find(v.prefab, "wall") == nil
+         then
+          v.components.combat:GetAttacked(
+            attacker,
+            attacker.components.combat:CalcDamage(v, inst, TUNING.SenHai.storm_damage_ratio),
+            inst
+          )
+          attacker.components.health:DoDelta(
+            calcHealthDrain(inst, attacker, v) * TUNING.SenHai.storm_damage_ratio * 0.25
+          )
+        end
       end
     end
   end
