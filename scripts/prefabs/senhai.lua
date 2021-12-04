@@ -37,15 +37,39 @@ local PickUpCanTags = {
   "spider"
 }
 local PickUpForbidPrefabs = {
+  axe = true,
+  goldenaxe = true,
+  pickaxe = true,
+  goldenpickaxe = true,
+  shovel = true,
+  goldenshovel = true,
+  hammer = true,
+  multitool_axe_pickaxe = true,
+  pitchfork = true,
+  razor = true,
+  featherpencil = true,
+  fishingrod = true,
+  oceanfishingrod = true,
+  panflute = true,
+  lantern = true,
+  pumpkin_lantern = true,
+  brush = true,
   trap = true,
-  bridtrap = true,
+  birdtrap = true,
   opalstaff = true,
-  yellowstaff = true
+  yellowstaff = true,
+  chester_eyebone = true,
+  glommerflower = true,
+  lavae_egg = true,
+  lavae_cocoon = true,
+  glommerfuel = true,
+  horn = true,
+  heatrock = true
 }
 local PickUpRange = 10
-local PickUpCD = 0.1
+local pickUpCD = 0.1
 
-local function pickup(inst, owner)
+local function autoPickup(inst, owner)
   if owner == nil or owner.components.inventory == nil then
     return
   end
@@ -93,6 +117,29 @@ local function pickup(inst, owner)
   end
 end
 
+local refreshCD = 2
+local healAmount = 5
+local healHungerRate = 1.2
+-- local sanityAmount = 5
+-- local sanityHungerRate = 1.5
+local function autoHealAndRefresh(inst, owner)
+  if
+    (owner.components.health and owner.components.health:IsHurt() and not owner.components.oldager) and
+      (owner.components.hunger and owner.components.hunger.current > healAmount * healHungerRate)
+   then
+    owner.components.health:DoDelta(healAmount)
+    owner.components.hunger:DoDelta(-healAmount * healHungerRate)
+  end
+
+  -- if
+  --   (owner.components.sanity and owner.components.sanity:IsInsane()) and
+  --     (owner.components.hunger and owner.components.hunger.current > sanityAmount * sanityHungerRate)
+  --  then
+  --   owner.components.sanity:DoDelta(sanityAmount)
+  --   owner.components.hunger:DoDelta(-sanityAmount * sanityHungerRate)
+  -- end
+end
+
 local function OnRemoveEntity(inst)
   inst._light:Remove()
 end
@@ -110,16 +157,22 @@ local function onEquip(inst, owner) --装备
   owner.AnimState:Show("ARM_carry")
   owner.AnimState:Hide("ARM_normal")
 
-  inst.task = inst:DoPeriodicTask(PickUpCD, pickup, nil, owner)
+  inst.task_pick = inst:DoPeriodicTask(pickUpCD, autoPickup, nil, owner)
+  inst.task_heal = inst:DoPeriodicTask(refreshCD, autoHealAndRefresh, nil, owner)
 end
 
 local function onUnequip(inst, owner) --解除装备
   owner.AnimState:Hide("ARM_carry")
   owner.AnimState:Show("ARM_normal")
 
-  if inst.task ~= nil then
-    inst.task:Cancel()
-    inst.task = nil
+  if inst.task_pick ~= nil then
+    inst.task_pick:Cancel()
+    inst.task_pick = nil
+  end
+
+  if inst.task_heal ~= nil then
+    inst.task_heal:Cancel()
+    inst.task_heal = nil
   end
 end
 
@@ -149,9 +202,10 @@ end
 local function calcHealthDrain(inst, attacker, target)
   return (inst.components.weapon.damage * 0.8 + attacker.components.combat.defaultdamage * 0.75 +
     target.components.combat.defaultdamage * 0.05) *
-    0.015 *
     (target:HasTag("epic") and 1.2 or 0.6) *
-    (attacker.components.health:GetPercent() < 0.2 and 1.5 or 1)
+    (attacker.components.health:GetPercent() < 0.2 and 1.5 or 1) *
+    -- 0.015
+    0.005
 end
 
 local function onattack(inst, attacker, target) -- inst, attacker, target, skipsanity
@@ -175,7 +229,9 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
   end
 
   -- 吸血
-  attacker.components.health:DoDelta(calcHealthDrain(inst, attacker, target))
+  if target.components.combat then
+    attacker.components.health:DoDelta(calcHealthDrain(inst, attacker, target))
+  end
 
   -- 几率 AOE
   if
@@ -237,11 +293,11 @@ local function fn()
     return inst
   end
 
-  inst:AddComponent("inspectable") --可检查组件
-  inst:AddComponent("inventoryitem") --物品组件
-  inst:AddComponent("equippable") --可装备组件
+  inst:AddComponent("inspectable")
+  inst:AddComponent("inventoryitem")
+  inst:AddComponent("equippable")
 
-  inst:AddComponent("weapon") --增加武器组件 有了这个才可以打人
+  inst:AddComponent("weapon")
   inst.components.weapon:SetDamage(TUNING.SenHai.damage)
 
   inst.components.weapon:SetRange(TUNING.SenHai.range, TUNING.SenHai.range + 2)
@@ -264,7 +320,7 @@ local function fn()
   inst.components.equippable:SetOnEquip(onEquip)
   inst.components.equippable:SetOnUnequip(onUnequip)
   inst.components.equippable.walkspeedmult = math.floor(TUNING.CANE_SPEED_MULT * 115) / 100
-  inst.components.equippable.dapperness = TUNING.DAPPERNESS_HUGE / 4
+  inst.components.equippable.dapperness = TUNING.DAPPERNESS_MED
 
   inst.OnRemoveEntity = OnRemoveEntity
 

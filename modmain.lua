@@ -32,17 +32,17 @@ Recipe(
     TECH.NONE
   ).atlas = "images/inventoryimages/senhai.xml"
 
-AddPrefabPostInit(
-  "krampus_sack",
-  function(inst)
-    if TheWorld.ismastersim then
-      if not inst:HasTag("fridge") then
-        inst:AddTag("fridge")
-      end
+-- AddPrefabPostInit(
+--   "krampus_sack",
+--   function(inst)
+--     if TheWorld.ismastersim then
+--       if not inst:HasTag("fridge") then
+--         inst:AddTag("fridge")
+--       end
 
-      if inst.components.equippable ~= nil then
-        inst.components.equippable.walkspeedmult = 1.05
-      end
-    end
-  end
-)
+--       if inst.components.equippable ~= nil then
+--         inst.components.equippable.walkspeedmult = 1.05
+--       end
+--     end
+--   end
+-- )
