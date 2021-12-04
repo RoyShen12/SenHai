@@ -37,6 +37,8 @@ local PickUpCanTags = {
   "spider"
 }
 local PickUpForbidPrefabs = {
+  spear = true,
+  spear_wathgrithr = true,
   axe = true,
   goldenaxe = true,
   pickaxe = true,
@@ -228,6 +230,43 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
   if target.components.combat then
     -- 吸血
     attacker.components.health:DoDelta(calcHealthDrain(inst, attacker, target))
+    -- 吸血鬼的拥抱
+    if math.random() > 0.5 then
+      for _, other_player in ipairs(AllPlayers) do
+        if
+          other_player ~= attacker and not other_player:HasTag("playerghost") and
+            attacker.components.sanity.current > 10 and
+            other_player.components.health and
+            not other_player.components.oldager and
+            other_player.Transform and
+            other_player.components.combat and
+            other_player.components.health:IsHurt() and
+            (other_player.components.health:GetPercent() < 0.5 or
+              other_player.components.health.currenthealth < 100) and
+            not other_player.components.health:IsDead() and
+            attacker:GetDistanceSqToInst(other_player) < 900
+         then
+          ---@diagnostic disable-next-line: redundant-parameter
+          attacker.components.talker:Say("吸血鬼的拥抱")
+          attacker.components.sanity:DoDelta(-10)
+          attacker.components.hunger:DoDelta(-10)
+
+          local HOT =
+            attacker:DoPeriodicTask(
+            0.1,
+            function()
+              other_player.components.health:DoDelta(1)
+            end
+          )
+          attacker:DoTaskInTime(
+            5,
+            function()
+              HOT:Cancel()
+            end
+          )
+        end
+      end
+    end
     -- 减速
     slowDown(attacker, target, 0.6, 2)
     -- 几率 AOE
@@ -235,6 +274,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
       TUNING.SenHai.storm_chance > 0 and math.random(0, 100) > (100 - TUNING.SenHai.storm_chance) and
         attacker.components.combat:IsValidTarget(target)
      then
+      ---@diagnostic disable-next-line: redundant-parameter
       attacker.components.talker:Say("风暴！")
 
       local x, y, z = target.Transform:GetWorldPosition()
@@ -262,7 +302,17 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
       end
     end
     -- exp
-    attacker.components.achievementmanager:sumexp(attacker, 1)
+    pcall(
+      function()
+        if attacker.components.achievementmanager then
+          local old_say = attacker.components.talker.Say
+          attacker.components.talker.Say = function()
+          end
+          attacker.components.achievementmanager:sumexp(attacker, 5)
+          attacker.components.talker.Say = old_say
+        end
+      end
+    )
   end
 end
 
@@ -323,7 +373,7 @@ local function fn()
 
   inst.components.equippable:SetOnEquip(onEquip)
   inst.components.equippable:SetOnUnequip(onUnequip)
-  inst.components.equippable.walkspeedmult = math.floor(TUNING.CANE_SPEED_MULT * 115) / 100
+  inst.components.equippable.walkspeedmult = math.floor(TUNING.CANE_SPEED_MULT * 125) / 100
   inst.components.equippable.dapperness = TUNING.DAPPERNESS_MED
 
   inst.OnRemoveEntity = OnRemoveEntity
