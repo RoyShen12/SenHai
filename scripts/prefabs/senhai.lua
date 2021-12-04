@@ -229,7 +229,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
     -- 吸血
     attacker.components.health:DoDelta(calcHealthDrain(inst, attacker, target))
     -- 减速
-    slowDown(attacker, target, 0.7, 2)
+    slowDown(attacker, target, 0.6, 2)
     -- 几率 AOE
     if
       TUNING.SenHai.storm_chance > 0 and math.random(0, 100) > (100 - TUNING.SenHai.storm_chance) and
@@ -246,17 +246,23 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
             attacker.components.combat:IsValidTarget(v) and
             string.find(v.prefab, "wall") == nil
          then
+          -- AOE damage
           v.components.combat:GetAttacked(
             attacker,
             attacker.components.combat:CalcDamage(v, inst, TUNING.SenHai.storm_damage_ratio),
             inst
           )
+          -- 少量附带吸血
           attacker.components.health:DoDelta(
             calcHealthDrain(inst, attacker, v) * TUNING.SenHai.storm_damage_ratio * 0.25
           )
+          -- 群体减速
+          slowDown(attacker, target, 0.65, 2)
         end
       end
     end
+    -- exp
+    attacker.components.achievementmanager:sumexp(attacker, 1)
   end
 end
 

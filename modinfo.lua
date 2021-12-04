@@ -3,7 +3,7 @@ description = [[
 森域 X 海域
 ]]
 author = "猪猪"
-version = "1.10"
+version = "1.12"
 forumthread = ""
 dst_compatible = true --兼容联机
 dont_starve_compatible = false --不兼容单机
@@ -75,7 +75,7 @@ configuration_options = {
       {description = "60%", data = 60},
       {description = "100%", data = 100}
     },
-    default = 5
+    default = 10
   },
   {
     name = "StormRange",
