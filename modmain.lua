@@ -11,6 +11,17 @@ PrefabFiles = {
   "senhai"
 }
 
+-- 天气棒
+TUNING.TORNADOSTAFF_USES = 120
+-- 懒人魔杖
+TUNING.ORANGESTAFF_USES = 120
+-- 唤星杖
+TUNING.YELLOWSTAFF_USES = 120
+-- 老奶奶
+TUNING.WICKERBOTTOM_SANITY = 1000
+
+TUNING.ARMORMARBLE_SLOW = 1.05
+
 TUNING.SenHai = {}
 
 TUNING.SenHai.storm_chance = GetModConfigData("StormChance")

@@ -66,7 +66,8 @@ local PickUpForbidPrefabs = {
   lavae_cocoon = true,
   glommerfuel = true,
   horn = true,
-  heatrock = true
+  heatrock = true,
+  flint = true
 }
 local PickUpRange = 10
 local pickUpCD = 0.1
