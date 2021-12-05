@@ -39,6 +39,7 @@ local PickUpCanTags = {
 local PickUpForbidPrefabs = {
   spear = true,
   spear_wathgrithr = true,
+  torch = true,
   axe = true,
   goldenaxe = true,
   pickaxe = true,
@@ -67,7 +68,23 @@ local PickUpForbidPrefabs = {
   glommerfuel = true,
   horn = true,
   heatrock = true,
-  flint = true
+  flint = true,
+  strawhat = true,
+  tophat = true,
+  beefalohat = true,
+  winterhat = true,
+  minerhat = true,
+  bedroll_straw = true,
+  tentaclespike = true,
+  spidereggsack = true,
+  spiderhat = true,
+  beehat = true,
+  wetgoop = true,
+  spoiled_food = true
+}
+local PickUpForbidPattern = {
+  "_tacklesketch",
+  "_sketch"
 }
 local PickUpRange = 10
 local pickUpCD = 0.1
@@ -87,6 +104,14 @@ local function autoPickup(inst, owner)
       v.components.inventoryitem ~= nil and v.components.inventoryitem.canbepickedup and
         v.prefab ~= nil and
         not PickUpForbidPrefabs[v.prefab] and
+        (function()
+          for _, pattern in ipairs(PickUpForbidPattern) do
+            if string.match(v.prefab, pattern) ~= nil then
+              return false
+            end
+          end
+          return true
+        end)() and
         v.components.inventoryitem.cangoincontainer and
         not v.components.inventoryitem:IsHeld() and
         owner.components.inventory:CanAcceptCount(v, 1) > 0 and
@@ -232,7 +257,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
     -- 吸血
     attacker.components.health:DoDelta(calcHealthDrain(inst, attacker, target))
     -- 吸血鬼的拥抱
-    if math.random() > 0.5 then
+    if math.random() > 0.5 and #AllPlayers > 1 then
       for _, other_player in ipairs(AllPlayers) do
         if
           other_player ~= attacker and not other_player:HasTag("playerghost") and
@@ -302,14 +327,14 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
         end
       end
     end
-    -- exp
+    -- gain exp
     pcall(
       function()
         if attacker.components.achievementmanager then
           local old_say = attacker.components.talker.Say
           attacker.components.talker.Say = function()
           end
-          attacker.components.achievementmanager:sumexp(attacker, 5)
+          attacker.components.achievementmanager:sumexp(attacker, target:HasTag("epic") and 15 or 5)
           attacker.components.talker.Say = old_say
         end
       end

@@ -20,6 +20,7 @@ TUNING.YELLOWSTAFF_USES = 120
 -- 老奶奶
 TUNING.WICKERBOTTOM_SANITY = 1000
 
+TUNING.ARMORMARBLE = 150 * 7 * 0.7 * 15
 TUNING.ARMORMARBLE_SLOW = 1.05
 
 TUNING.SenHai = {}
@@ -57,6 +58,50 @@ Recipe(
 --     end
 --   end
 -- )
+
+local containers = require("containers")
+
+local params = {}
+
+local widget = {
+  slotpos = {},
+  -- animbank = "ui_krampusbag_2x12",
+  -- animbuild = "ui_krampusbag_2x12",
+  pos = Vector3(-5, -120, 0)
+}
+
+for y = -2, 7 do
+  table.insert(widget.slotpos, Vector3(-162 - 75, -75 * y + 240, 0))
+  table.insert(widget.slotpos, Vector3(-162, -75 * y + 240, 0))
+  table.insert(widget.slotpos, Vector3(-162 + 75, -75 * y + 240, 0))
+end
+
+params.krampus_sack = {
+  widget = widget,
+  issidewidget = true,
+  type = "pack",
+  openlimit = 1
+}
+
+-- remax
+for _, v in pairs(params) do
+  containers.MAXITEMSLOTS =
+    math.max(containers.MAXITEMSLOTS, v.widget.slotpos ~= nil and #v.widget.slotpos or 0)
+end
+
+local containers_widgetsetup_base = containers.widgetsetup
+
+function containers.widgetsetup(container, prefab, data)
+  local t = params[prefab or container.inst.prefab]
+  if t ~= nil then
+    for k, v in pairs(t) do
+      container[k] = v
+    end
+    container:SetNumSlots(container.widget.slotpos ~= nil and #container.widget.slotpos or 0)
+  else
+    containers_widgetsetup_base(container, prefab, data)
+  end
+end
 
 GLOBAL.c_link = function(w1, w2)
   if
