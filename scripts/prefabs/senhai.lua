@@ -126,7 +126,7 @@ local PickUpForbidPattern = {
   "^armor.*",
   "trunkvest_"
 }
-local PickUpCD = 0.1
+local PickUpCD = 0.3
 
 local function AutoPickup(inst, owner)
   if owner == nil or owner.components.inventory == nil then
@@ -348,7 +348,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
       local stormHitCount = 0
 
       local x, y, z = target.Transform:GetWorldPosition()
-      local ents = TheSim:FindEntities(x, y, z, TUNING.SenHai.storm_range)
+      local ents = TheSim:FindEntities(x, y, z, TUNING.SenHai.storm_range + inst.storm_extra_range)
 
       for k, v in pairs(ents) do
         if
@@ -466,7 +466,8 @@ local function OnGetItemFromPlayer(inst, giver, item)
 
   inst.peridicHealCD = math.max(1, 10 - inst.level * 0.5)
   inst.peridicHealAmount = 2 + math.floor((inst.level + 5) * 0.5)
-  inst.healHungerRate = math.max(0.1, 1.6 - inst.level * 0.1)
+  inst.healHungerRate = math.max(1.2, 1.6 - inst.level * 0.02)
+
   inst.healthSteelRatio = 0.1 + 0.1 * (inst.level + 1)
   inst.slowingRate = math.min(0.990, 0.1 + (inst.level + 5) * 0.01)
   inst.expFromHit = 5 + inst.level * 3
@@ -481,6 +482,8 @@ local function OnGetItemFromPlayer(inst, giver, item)
     TUNING.SenHai.range + math.min(10, inst.level * 0.2),
     TUNING.SenHai.range + math.min(12, 0.5 * (inst.level + 2))
   )
+
+  inst.storm_extra_range = math.min(9, inst.level * 0.3)
 
   inst.components.equippable.walkspeedmult =
     math.min(2.55, math.floor(TUNING.CANE_SPEED_MULT * (100 + inst.level * 5)) / 100)
