@@ -126,7 +126,7 @@ local PickUpForbidPattern = {
   "^armor.*",
   "trunkvest_"
 }
-local PickUpCD = 0.3
+local PickUpCD = 0.1
 
 local function AutoPickup(inst, owner)
   if owner == nil or owner.components.inventory == nil then
