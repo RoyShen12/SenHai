@@ -90,7 +90,6 @@ local PickUpForbidPattern = {
   "_sketch",
   "deer_antler"
 }
-local PickUpRange = 10
 local PickUpCD = 0.1
 
 local function AutoPickup(inst, owner)
@@ -99,7 +98,7 @@ local function AutoPickup(inst, owner)
   end
 
   local x, y, z = owner.Transform:GetWorldPosition()
-  local ents = TheSim:FindEntities(x, y, z, PickUpRange, PickUpMustTags, PickUpCanTags)
+  local ents = TheSim:FindEntities(x, y, z, inst.pickUpRange, PickUpMustTags, PickUpCanTags)
 
   local ba = owner:GetBufferedAction()
 
@@ -149,7 +148,6 @@ local function AutoPickup(inst, owner)
   end
 end
 
-local refreshCD = 2
 -- local sanityAmount = 5
 -- local sanityHungerRate = 1.5
 local function autoHealAndRefresh(inst, owner)
@@ -189,7 +187,7 @@ local function onEquip(inst, owner) --装备
   owner.AnimState:Hide("ARM_normal")
 
   inst.task_pick = inst:DoPeriodicTask(PickUpCD, AutoPickup, nil, owner)
-  inst.task_heal = inst:DoPeriodicTask(refreshCD, autoHealAndRefresh, nil, owner)
+  inst.task_heal = inst:DoPeriodicTask(inst.peridicHealCD, autoHealAndRefresh, nil, owner)
 end
 
 local function onUnequip(inst, owner) --解除装备
@@ -464,10 +462,13 @@ local function OnGetItemFromPlayer(inst, giver, item)
     end
   end
 
+  inst.pickUpRange = math.min(15, 4 + inst.level * 0.5)
+
+  inst.peridicHealCD = math.max(1, 10 - inst.level * 0.5)
   inst.peridicHealAmount = 2 + math.floor((inst.level + 5) * 0.5)
   inst.healHungerRate = math.max(0.1, 1.6 - inst.level * 0.1)
   inst.healthSteelRatio = 0.1 + 0.1 * (inst.level + 1)
-  inst.slowingRate = math.max(0.990, 0.1 + (inst.level + 5) * 0.01)
+  inst.slowingRate = math.min(0.990, 0.1 + (inst.level + 5) * 0.01)
   inst.expFromHit = 5 + inst.level * 3
 
   inst.speedUpAmount = 1 + inst.level * 0.2
