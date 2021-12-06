@@ -238,7 +238,7 @@ local function FastRun(player, amount)
   FastRunOn(player, amount)
 
   player:DoTaskInTime(
-    1,
+    0.5,
     function()
       FastRunOff(player, amount)
     end
@@ -314,10 +314,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
     -- 减速
     slowDown(attacker, target, 1 - inst.slowingRate, 2)
     -- 几率 AOE
-    if
-      TUNING.SenHai.storm_chance > 0 and math.random(0, 100) > (100 - TUNING.SenHai.storm_chance) and
-        attacker.components.combat:IsValidTarget(target)
-     then
+    if TUNING.SenHai.storm_chance > 0 and math.random(0, 100) > (100 - TUNING.SenHai.storm_chance) then
       ---@diagnostic disable-next-line: redundant-parameter
       attacker.components.talker:Say("风暴！")
 
@@ -348,11 +345,11 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
             calcHealthDrain(inst, attacker, v) * TUNING.SenHai.storm_damage_ratio * 0.25
           )
           -- 群体减速
-          slowDown(attacker, target, (1 - inst.slowingRate) * 1.1, 2)
+          slowDown(attacker, v, (1 - inst.slowingRate) * 1.1, 2)
         end
       end
 
-      while stormHitCount < 2 do
+      while attacker.components.combat:IsValidTarget(target) and stormHitCount < 2 do
         target.components.combat:GetAttacked(
           attacker,
           attacker.components.combat:CalcDamage(target, inst),
