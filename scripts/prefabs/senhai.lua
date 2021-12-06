@@ -283,7 +283,7 @@ end
 
 local function onattack(inst, attacker, target) -- inst, attacker, target, skipsanity
   --加入冰杖效果
-  -- inst.SoundEmitter:PlaySound("dontstarve_DLC002/common/obsidian_wetsizzles")
+  inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
 
   if not target:IsValid() then
     return
