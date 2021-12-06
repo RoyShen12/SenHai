@@ -3,7 +3,7 @@ description = [[
 森域 X 海域
 ]]
 author = "猪猪"
-version = "1.23"
+version = "1.25-1"
 forumthread = ""
 dst_compatible = true --兼容联机
 dont_starve_compatible = false --不兼容单机

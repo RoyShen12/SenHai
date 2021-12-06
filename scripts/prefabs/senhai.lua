@@ -70,16 +70,9 @@ local PickUpForbidPrefabs = {
   horn = true,
   heatrock = true,
   -- flint = true,
-  strawhat = true,
-  tophat = true,
-  beefalohat = true,
-  winterhat = true,
-  minerhat = true,
   bedroll_straw = true,
   tentaclespike = true,
   -- spidereggsack = true,
-  spiderhat = true,
-  beehat = true,
   wetgoop = true,
   spoiled_food = true,
   sketch = true,
@@ -89,12 +82,24 @@ local PickUpForbidPrefabs = {
   lighter = true,
   abigail_flower = true,
   lucy = true,
-  mermhat = true
+  reskin_tool = true,
+  terrarium = true,
+  tacklesketch = true,
+  raincoat = true,
+  sweatervest = true,
+  reflectivevest = true,
+  hawaiianshirt = true,
+  beargervest = true,
+  cane = true
 }
 local PickUpForbidPattern = {
   "_tacklesketch",
   "_sketch",
-  "deer_antler"
+  "deer_antler",
+  "blowdart_",
+  ".*hat$",
+  "^armor.*",
+  "trunkvest_"
 }
 local PickUpCD = 0.1
 
@@ -330,8 +335,8 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
             string.find(v.prefab, "wall") == nil
          then
           stormHitCount = stormHitCount + 1
-          -- SpawnPrefab("explode_reskin").Transform:SetPosition(v.Transform:GetWorldPosition())
-          SpawnPrefab("maxwell_smoke").Transform:SetPosition(v.Transform:GetWorldPosition())
+          SpawnPrefab("explode_reskin").Transform:SetPosition(v.Transform:GetWorldPosition())
+          -- SpawnPrefab("maxwell_smoke").Transform:SetPosition(v.Transform:GetWorldPosition())
           -- AOE damage
           v.components.combat:GetAttacked(
             attacker,
@@ -442,7 +447,7 @@ local function OnGetItemFromPlayer(inst, giver, item)
     while inst.exp >= LevelUpTable[inst.level + 1] do
       inst.exp = inst.exp - LevelUpTable[inst.level + 1]
       inst.level = inst.level + 1
-      ReportLevel(inst, giver)
+      ReportLevel(inst, giver, "  +" .. exp_get)
     end
   end
 
