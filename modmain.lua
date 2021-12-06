@@ -70,10 +70,14 @@ local widget = {
   pos = Vector3(-5, -120, 0)
 }
 
+local height_base = 240
+local pos_base = -162
+local unit_size = 75
+
 for y = -2, 7 do
-  table.insert(widget.slotpos, Vector3(-162 - 75, -75 * y + 240, 0))
-  table.insert(widget.slotpos, Vector3(-162, -75 * y + 240, 0))
-  table.insert(widget.slotpos, Vector3(-162 + 75, -75 * y + 240, 0))
+  table.insert(widget.slotpos, Vector3(pos_base - unit_size, -unit_size * y + height_base, 0))
+  table.insert(widget.slotpos, Vector3(pos_base + 0, -unit_size * y + height_base, 0))
+  table.insert(widget.slotpos, Vector3(pos_base + unit_size, -unit_size * y + height_base, 0))
 end
 
 params.krampus_sack = {
@@ -101,6 +105,111 @@ function containers.widgetsetup(container, prefab, data)
   else
     containers_widgetsetup_base(container, prefab, data)
   end
+end
+
+GLOBAL.WeaponExpTable = {
+  saltrock = 1,
+  driftwood_log = 1,
+  spoiled_fish = 1,
+  spoiled_fish_small = 1,
+  rottenegg = 1,
+  ash = 1,
+  feather_crow = 1,
+  feather_robin = 1,
+  feather_robin_winter = 1,
+  silk = 1,
+  cutgrass = 1,
+  flint = 1,
+  rocks = 1,
+  nitre = 1,
+  log = 1,
+  twigs = 1,
+  monstermeat = 1,
+  poop = 1,
+  guano = 1,
+  boneshard = 1,
+  houndstooth = 1,
+  beardhair = 1,
+  petals = 2,
+  marble = 2,
+  charcoal = 2,
+  meat = 2,
+  pigskin = 2,
+  batwing = 2,
+  spidergland = 2,
+  mosquitosack = 2,
+  lightbulb = 3,
+  wormlight = 3,
+  wormlight_lesser = 3,
+  honeycomb = 3,
+  stinger = 3,
+  cutreeds = 3,
+  coontail = 3,
+  gears = 3,
+  thulecite_pieces = 3,
+  glommerwings = 3,
+  glommerfuel = 3,
+  ice = 3,
+  goldnugget = 3,
+  nightmarefuel = 4,
+  petals_evil = 4,
+  livinglog = 5,
+  phlegm = 5,
+  steelwool = 5,
+  trunk_summer = 5,
+  trunk_winter = 5,
+  walrus_tusk = 5,
+  feather_canary = 5,
+  tentaclespots = 5,
+  horn = 5,
+  lightninggoathorn = 5,
+  cookiecuttershell = 5,
+  slurper_pelt = 5,
+  fig = 5,
+  redgem = 6,
+  bluegem = 6,
+  purplegem = 7,
+  greengem = 7,
+  orangegem = 8,
+  yellowgem = 8,
+  opalpreciousgem = 9,
+  moonrocknugget = 30,
+  moonglass = 100,
+  thulecite = 100,
+  moonglass_charged = 140,
+  moonstorm_spark = 150,
+  moonstorm_glass = 160,
+  goose_feather = 200,
+  bearger_fur = 500,
+  deerclops_eyeball = 1000,
+  dragon_scales = 2500,
+  shroom_skin = 3500,
+  minotaurhorn = 10000,
+  malbatross_beak = 30000,
+  malbatross_feather = 30000,
+  fossil_piece = 50000,
+  fossil_piece_clean = 50000,
+  alterguardianhat = 150000
+}
+
+setmetatable(
+  GLOBAL.WeaponExpTable,
+  {
+    __index = function(t, k)
+      return 0.1
+    end
+  }
+)
+
+for prefab, _ in pairs(GLOBAL.WeaponExpTable) do
+  AddPrefabPostInit(
+    prefab,
+    function(inst)
+      if not inst.components.tradable then
+        inst:AddComponent("tradable")
+      end
+    end
+  )
 end
 
 GLOBAL.c_link = function(w1, w2)

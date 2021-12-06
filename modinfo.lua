@@ -3,7 +3,7 @@ description = [[
 森域 X 海域
 ]]
 author = "猪猪"
-version = "1.15-alpha-8"
+version = "1.20"
 forumthread = ""
 dst_compatible = true --兼容联机
 dont_starve_compatible = false --不兼容单机
@@ -22,7 +22,7 @@ server_filter_tags = {}
 configuration_options = {
   {
     name = "Damage",
-    label = "武器伤害",
+    label = "武器基础伤害",
     options = {
       {description = "11", data = 11},
       {description = "15", data = 15},
@@ -44,7 +44,7 @@ configuration_options = {
   },
   {
     name = "Range",
-    label = "射程",
+    label = "基础射程",
     options = {
       {description = "0.75", data = 0.75},
       {description = "1.25", data = 1.25},

@@ -116,7 +116,8 @@
         "CHATFONT_OUTLINE",
         "SCALEMODE_FIXEDSCREEN_NONDYNAMIC",
         "EBSHOP",
-        "SellRetryLoops"
+        "SellRetryLoops",
+        "WeaponExpTable"
     ],
     "lua.targetVersion": "5.1",
     "search.exclude": {

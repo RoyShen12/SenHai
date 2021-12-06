@@ -57,6 +57,7 @@ local PickUpForbidPrefabs = {
   lantern = true,
   pumpkin_lantern = true,
   brush = true,
+  bugnet = true,
   trap = true,
   birdtrap = true,
   opalstaff = true,
@@ -68,7 +69,7 @@ local PickUpForbidPrefabs = {
   glommerfuel = true,
   horn = true,
   heatrock = true,
-  flint = true,
+  -- flint = true,
   strawhat = true,
   tophat = true,
   beefalohat = true,
@@ -76,20 +77,23 @@ local PickUpForbidPrefabs = {
   minerhat = true,
   bedroll_straw = true,
   tentaclespike = true,
-  spidereggsack = true,
+  -- spidereggsack = true,
   spiderhat = true,
   beehat = true,
   wetgoop = true,
-  spoiled_food = true
+  spoiled_food = true,
+  sketch = true,
+  amulet = true
 }
 local PickUpForbidPattern = {
   "_tacklesketch",
-  "_sketch"
+  "_sketch",
+  "deer_antler"
 }
 local PickUpRange = 10
-local pickUpCD = 0.1
+local PickUpCD = 0.1
 
-local function autoPickup(inst, owner)
+local function AutoPickup(inst, owner)
   if owner == nil or owner.components.inventory == nil then
     return
   end
@@ -146,17 +150,16 @@ local function autoPickup(inst, owner)
 end
 
 local refreshCD = 2
-local healAmount = 5
-local healHungerRate = 1.2
 -- local sanityAmount = 5
 -- local sanityHungerRate = 1.5
 local function autoHealAndRefresh(inst, owner)
   if
     (owner.components.health and owner.components.health:IsHurt() and not owner.components.oldager) and
-      (owner.components.hunger and owner.components.hunger.current > healAmount * healHungerRate)
+      (owner.components.hunger and
+        owner.components.hunger.current > inst.peridicHealAmount * inst.healHungerRate)
    then
-    owner.components.health:DoDelta(healAmount)
-    owner.components.hunger:DoDelta(-healAmount * healHungerRate)
+    owner.components.health:DoDelta(inst.peridicHealAmount)
+    owner.components.hunger:DoDelta(-inst.peridicHealAmount * inst.healHungerRate)
   end
 
   -- if
@@ -185,7 +188,7 @@ local function onEquip(inst, owner) --装备
   owner.AnimState:Show("ARM_carry")
   owner.AnimState:Hide("ARM_normal")
 
-  inst.task_pick = inst:DoPeriodicTask(pickUpCD, autoPickup, nil, owner)
+  inst.task_pick = inst:DoPeriodicTask(PickUpCD, AutoPickup, nil, owner)
   inst.task_heal = inst:DoPeriodicTask(refreshCD, autoHealAndRefresh, nil, owner)
 end
 
@@ -227,13 +230,43 @@ local function slowDown(player, target, slow_mult, duration)
   end
 end
 
+local function FastRunOn(player, amount)
+  pcall(
+    function()
+      local lc = player.components.locomotor
+      lc.runspeed = lc.runspeed + amount
+      lc.walkspeed = lc.walkspeed + amount
+    end
+  )
+end
+local function FastRunOff(player, amount)
+  pcall(
+    function()
+      local lc = player.components.locomotor
+      lc.runspeed = lc.runspeed - amount
+      lc.walkspeed = lc.walkspeed - amount
+    end
+  )
+end
+
+local function FastRun(player, amount)
+  FastRunOn(player, amount)
+
+  player:DoTaskInTime(
+    2,
+    function()
+      FastRunOff(player, amount)
+    end
+  )
+end
+
 local function calcHealthDrain(inst, attacker, target)
   return (inst.components.weapon.damage * 0.8 + attacker.components.combat.defaultdamage * 0.75 +
     target.components.combat.defaultdamage * 0.05) *
     (target:HasTag("epic") and 1.2 or 0.6) *
     (attacker.components.health:GetPercent() < 0.2 and 1.5 or 1) *
-    -- 0.015
-    0.005
+    0.015 *
+    inst.healthSteelRatio
 end
 
 local function onattack(inst, attacker, target) -- inst, attacker, target, skipsanity
@@ -294,7 +327,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
       end
     end
     -- 减速
-    slowDown(attacker, target, 0.6, 2)
+    slowDown(attacker, target, 1 - inst.slowingRate, 2)
     -- 几率 AOE
     if
       TUNING.SenHai.storm_chance > 0 and math.random(0, 100) > (100 - TUNING.SenHai.storm_chance) and
@@ -303,6 +336,8 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
       ---@diagnostic disable-next-line: redundant-parameter
       attacker.components.talker:Say("风暴！")
 
+      local stormHitCount = 0
+
       local x, y, z = target.Transform:GetWorldPosition()
       local ents = TheSim:FindEntities(x, y, z, TUNING.SenHai.storm_range)
 
@@ -310,8 +345,11 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
         if
           v ~= target and v:IsValid() and v.components.combat and
             attacker.components.combat:IsValidTarget(v) and
+            v:HasTag("monster") and
+            not v:HasTag("wall") and
             string.find(v.prefab, "wall") == nil
          then
+          stormHitCount = stormHitCount + 1
           -- AOE damage
           v.components.combat:GetAttacked(
             attacker,
@@ -323,8 +361,19 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
             calcHealthDrain(inst, attacker, v) * TUNING.SenHai.storm_damage_ratio * 0.25
           )
           -- 群体减速
-          slowDown(attacker, target, 0.65, 2)
+          slowDown(attacker, target, (1 - inst.slowingRate) * 1.1, 2)
         end
+      end
+
+      while stormHitCount < 3 do
+        target.components.combat:GetAttacked(
+          attacker,
+          attacker.components.combat:CalcDamage(target, inst),
+          inst
+        )
+        stormHitCount = stormHitCount + 1
+
+        FastRun(attacker, inst.speedUpAmount)
       end
     end
     -- gain exp
@@ -334,11 +383,134 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
           local old_say = attacker.components.talker.Say
           attacker.components.talker.Say = function()
           end
-          attacker.components.achievementmanager:sumexp(attacker, target:HasTag("epic") and 15 or 5)
+          attacker.components.achievementmanager:sumexp(
+            attacker,
+            (target:HasTag("epic") and 3 or 1) * inst.expFromHit
+          )
           attacker.components.talker.Say = old_say
         end
       end
     )
+  end
+end
+
+local LevelUpTable = {
+  5,
+  10,
+  20,
+  30,
+  50,
+  100
+  -- 200
+  -- 300,
+  -- 500,
+  -- 800,
+  -- 1200,
+  -- 1700,
+  -- 2300,
+  -- 3000,
+  -- 3800,
+  -- 4700,
+  -- 5700,
+  -- 6800,
+  -- 9000
+}
+
+setmetatable(
+  LevelUpTable,
+  {
+    __index = function(t, k)
+      if type(k) == "number" then
+        return math.floor(
+          -6272.28633138961 + 2173.55677536105 * k - 277.323154161138 * math.pow(k, 2) +
+            15.7574193960469 * math.pow(k, 3) -
+            0.263861525485163 * math.pow(k, 4)
+        )
+      else
+        return nil
+      end
+    end
+  }
+)
+
+local function ReportLevel(inst, player, extra)
+  extra = extra or ""
+
+  player.components.talker:Say(
+    "等级:   " .. inst.level .. "\n经验: " .. inst.exp .. " / " .. LevelUpTable[inst.level + 1] .. extra
+  )
+end
+
+local function OnRefuseItem(inst, giver, item)
+  if item then
+    ReportLevel(inst, giver)
+  end
+end
+
+local function AcceptTest(inst, item)
+  return item and item.prefab ~= nil
+end
+
+local function OnGetItemFromPlayer(inst, giver, item)
+  if item and item.prefab ~= nil then
+    local exp_get = WeaponExpTable[item.prefab]
+    inst.exp = inst.exp + exp_get
+    ReportLevel(inst, giver, "  +" .. exp_get)
+
+    while inst.exp >= LevelUpTable[inst.level + 1] do
+      inst.exp = inst.exp - LevelUpTable[inst.level + 1]
+      inst.level = inst.level + 1
+      ReportLevel(inst, giver)
+    end
+  end
+
+  inst.peridicHealAmount = 2 + math.floor((inst.level + 5) * 0.5)
+  inst.healHungerRate = math.max(0.1, 1.6 - inst.level * 0.1)
+  inst.healthSteelRatio = 0.1 + 0.1 * (inst.level + 1)
+  inst.slowingRate = math.max(0.990, 0.1 + (inst.level + 5) * 0.01)
+  inst.expFromHit = 5 + inst.level * 3
+
+  inst.speedUpAmount = 1 + inst.level * 0.2
+
+  inst.components.tool:SetAction(ACTIONS.CHOP, math.min(20, 1 + inst.level * 0.5))
+  inst.components.tool:SetAction(ACTIONS.MINE, math.min(20, 1 + inst.level * 0.5))
+
+  inst.components.weapon:SetDamage(TUNING.SenHai.damage + inst.level * 5)
+  inst.components.weapon:SetRange(
+    TUNING.SenHai.range + math.min(10, inst.level * 0.2),
+    TUNING.SenHai.range + math.min(12, 0.5 * (inst.level + 2))
+  )
+
+  inst.components.equippable.walkspeedmult =
+    math.min(2.55, math.floor(TUNING.CANE_SPEED_MULT * (100 + inst.level * 5)) / 100)
+  inst.components.equippable.dapperness = TUNING.DAPPERNESS_MED * math.min(3, 1 + inst.level * 0.04)
+
+  if giver ~= nil and item ~= nil then
+    local OtherItems = giver.components.inventory:GetActiveItem()
+    if
+      OtherItems and OtherItems.prefab == item.prefab and OtherItems.components.stackable ~= nil and
+        OtherItems.components.stackable.stacksize >= 1
+     then
+      inst.components.trader:AcceptGift(giver, OtherItems, 1)
+    end
+  end
+end
+
+local function onsave(inst, data)
+  data.level = inst.level
+  data.exp = inst.exp
+end
+
+local function onpreload(inst, data)
+  if data then
+    if data.level then
+      inst.level = data.level
+    end
+    if data.exp then
+      inst.exp = data.exp
+    end
+
+    OnGetItemFromPlayer(inst)
   end
 end
 
@@ -362,12 +534,15 @@ local function fn()
   -- inst:AddTag("sharp") --武器的标签跟攻击方式跟攻击音效有关 没有特殊的话就用这两个
   -- inst:AddTag("pointy")
 
-  inst:AddTag("irreplaceable")
+  -- inst:AddTag("irreplaceable")
 
   inst:AddTag("icestaff")
   inst:AddTag("extinguisher")
 
   inst.entity:SetPristine()
+
+  inst.level = 0
+  inst.exp = 0
 
   if not TheWorld.ismastersim then
     return inst
@@ -378,17 +553,12 @@ local function fn()
   inst:AddComponent("equippable")
 
   inst:AddComponent("weapon")
-  inst.components.weapon:SetDamage(TUNING.SenHai.damage)
-
-  inst.components.weapon:SetRange(TUNING.SenHai.range, TUNING.SenHai.range + 2)
   inst.components.weapon:SetProjectile("ice_projectile")
 
   inst.components.weapon:SetOnAttack(onattack)
   -- inst.components.weapon.onattack = onattack
 
   inst:AddComponent("tool")
-  inst.components.tool:SetAction(ACTIONS.CHOP, 4)
-  inst.components.tool:SetAction(ACTIONS.MINE, 2)
 
   inst.components.inventoryitem.atlasname = "images/inventoryimages/senhai.xml" --物品贴图
 
@@ -399,12 +569,20 @@ local function fn()
 
   inst.components.equippable:SetOnEquip(onEquip)
   inst.components.equippable:SetOnUnequip(onUnequip)
-  inst.components.equippable.walkspeedmult = math.floor(TUNING.CANE_SPEED_MULT * 125) / 100
-  inst.components.equippable.dapperness = TUNING.DAPPERNESS_MED
 
   inst.OnRemoveEntity = OnRemoveEntity
 
   -- MakeHauntableLaunch(inst)
+
+  inst:ListenForEvent("equipped", OnGetItemFromPlayer)
+
+  inst:AddComponent("trader")
+  inst.components.trader:SetAcceptTest(AcceptTest)
+  inst.components.trader.onaccept = OnGetItemFromPlayer
+  inst.components.trader.onrefuse = OnRefuseItem
+
+  inst.OnSave = onsave
+  inst.OnPreLoad = onpreload
 
   return inst
 end
