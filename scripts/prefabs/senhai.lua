@@ -146,16 +146,17 @@ local function AutoPickup(inst, owner)
 
       -- inst.components.finiteuses:Use(1)
 
-      local v_pos = v:GetPosition()
-      if v.components.stackable ~= nil then
-        v = v.components.stackable:Get()
-      end
+      -- local v_pos = v:GetPosition()
+      -- if v.components.stackable ~= nil then
+      --   v = v.components.stackable:Get()
+      -- end
 
-      if v.components.trap ~= nil and v.components.trap:IsSprung() then
-        v.components.trap:Harvest(owner)
-      else
-        owner.components.inventory:GiveItem(v, nil, v_pos)
-      end
+      -- if v.components.trap ~= nil and v.components.trap:IsSprung() then
+      --   v.components.trap:Harvest(owner)
+      -- else
+      --   owner.components.inventory:GiveItem(v, nil, v_pos)
+      -- end
+      owner.components.inventory:GiveItem(v, nil, v:GetPosition())
 
       return
     end
