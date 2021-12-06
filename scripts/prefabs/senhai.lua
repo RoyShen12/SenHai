@@ -131,7 +131,8 @@ local function AutoPickup(inst, owner)
         end)() and
         v.components.inventoryitem.cangoincontainer and
         not v.components.inventoryitem:IsHeld() and
-        owner.components.inventory:CanAcceptCount(v, 1) > 0 and
+        owner.components.inventory:CanAcceptCount(v) >=
+          (v.components.stackable ~= nil and v.components.stackable.stacksize or 1) and
         (ba == nil or ba.action ~= ACTIONS.PICKUP or ba.target ~= v)
      then
       if owner.components.minigame_participator ~= nil then
