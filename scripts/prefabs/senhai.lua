@@ -251,7 +251,7 @@ local function FastRun(player, amount)
   FastRunOn(player, amount)
 
   player:DoTaskInTime(
-    2,
+    1,
     function()
       FastRunOff(player, amount)
     end
@@ -471,7 +471,7 @@ local function OnGetItemFromPlayer(inst, giver, item)
   inst.slowingRate = math.min(0.990, 0.1 + (inst.level + 5) * 0.01)
   inst.expFromHit = 5 + inst.level * 3
 
-  inst.speedUpAmount = 1 + inst.level * 0.2
+  inst.speedUpAmount = 0.5 + inst.level * 0.06
 
   inst.components.tool:SetAction(ACTIONS.CHOP, math.min(20, 1 + inst.level * 0.5))
   inst.components.tool:SetAction(ACTIONS.MINE, math.min(20, 1 + inst.level * 0.5))
