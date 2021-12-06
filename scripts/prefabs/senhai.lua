@@ -83,7 +83,13 @@ local PickUpForbidPrefabs = {
   wetgoop = true,
   spoiled_food = true,
   sketch = true,
-  amulet = true
+  amulet = true,
+  glommerwings = true,
+  bernie_inactive = true,
+  lighter = true,
+  abigail_flower = true,
+  lucy = true,
+  mermhat = true
 }
 local PickUpForbidPattern = {
   "_tacklesketch",
@@ -179,30 +185,6 @@ end
 
 local function OnPutInInventory(inst)
   inst._light.Light:Enable(true)
-end
-
-local function onEquip(inst, owner) --装备
-  owner.AnimState:OverrideSymbol("swap_object", "swap_senhai", "swap_senhai")
-  owner.AnimState:Show("ARM_carry")
-  owner.AnimState:Hide("ARM_normal")
-
-  inst.task_pick = inst:DoPeriodicTask(PickUpCD, AutoPickup, nil, owner)
-  inst.task_heal = inst:DoPeriodicTask(inst.peridicHealCD, autoHealAndRefresh, nil, owner)
-end
-
-local function onUnequip(inst, owner) --解除装备
-  owner.AnimState:Hide("ARM_carry")
-  owner.AnimState:Show("ARM_normal")
-
-  if inst.task_pick ~= nil then
-    inst.task_pick:Cancel()
-    inst.task_pick = nil
-  end
-
-  if inst.task_heal ~= nil then
-    inst.task_heal:Cancel()
-    inst.task_heal = nil
-  end
 end
 
 local function slowDown(player, target, slow_mult, duration)
@@ -348,6 +330,8 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
             string.find(v.prefab, "wall") == nil
          then
           stormHitCount = stormHitCount + 1
+          -- SpawnPrefab("explode_reskin").Transform:SetPosition(v.Transform:GetWorldPosition())
+          SpawnPrefab("maxwell_smoke").Transform:SetPosition(v.Transform:GetWorldPosition())
           -- AOE damage
           v.components.combat:GetAttacked(
             attacker,
@@ -363,7 +347,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
         end
       end
 
-      while stormHitCount < 3 do
+      while stormHitCount < 2 do
         target.components.combat:GetAttacked(
           attacker,
           attacker.components.combat:CalcDamage(target, inst),
@@ -471,7 +455,7 @@ local function OnGetItemFromPlayer(inst, giver, item)
   inst.slowingRate = math.min(0.990, 0.1 + (inst.level + 5) * 0.01)
   inst.expFromHit = 5 + inst.level * 3
 
-  inst.speedUpAmount = 0.5 + inst.level * 0.06
+  inst.speedUpAmount = math.min(4, 0.5 + inst.level * 0.06)
 
   inst.components.tool:SetAction(ACTIONS.CHOP, math.min(20, 1 + inst.level * 0.5))
   inst.components.tool:SetAction(ACTIONS.MINE, math.min(20, 1 + inst.level * 0.5))
@@ -494,6 +478,31 @@ local function OnGetItemFromPlayer(inst, giver, item)
      then
       inst.components.trader:AcceptGift(giver, OtherItems, 1)
     end
+  end
+end
+
+local function onEquip(inst, owner) --装备
+  OnGetItemFromPlayer(inst)
+  owner.AnimState:OverrideSymbol("swap_object", "swap_senhai", "swap_senhai")
+  owner.AnimState:Show("ARM_carry")
+  owner.AnimState:Hide("ARM_normal")
+
+  inst.task_pick = inst:DoPeriodicTask(PickUpCD, AutoPickup, nil, owner)
+  inst.task_heal = inst:DoPeriodicTask(inst.peridicHealCD, autoHealAndRefresh, nil, owner)
+end
+
+local function onUnequip(inst, owner) --解除装备
+  owner.AnimState:Hide("ARM_carry")
+  owner.AnimState:Show("ARM_normal")
+
+  if inst.task_pick ~= nil then
+    inst.task_pick:Cancel()
+    inst.task_pick = nil
+  end
+
+  if inst.task_heal ~= nil then
+    inst.task_heal:Cancel()
+    inst.task_heal = nil
   end
 end
 
