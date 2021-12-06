@@ -115,7 +115,9 @@ local PickUpForbidPrefabs = {
   cane = true,
   mandrake = true,
   cookedmandrake = true,
-  mandrakesoup = true
+  mandrakesoup = true,
+  cookbook = true,
+  fishingnet = true
 }
 local PickUpForbidPattern = {
   "_tacklesketch",
@@ -124,7 +126,8 @@ local PickUpForbidPattern = {
   "blowdart_",
   ".*hat$",
   "^armor.*",
-  "trunkvest_"
+  "trunkvest_",
+  "oceanfishingbobber_"
 }
 local PickUpCD = 0.1
 
