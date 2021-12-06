@@ -276,6 +276,8 @@ for prefab, _ in pairs(GLOBAL.WeaponExpTable) do
   )
 end
 
+GLOBAL.WeaponExpTable.senhai = 10
+
 GLOBAL.c_link = function(w1, w2)
   if
     w1 and w2 and type(w1) == "table" and type(w2) == "table" and w1.prefab == "wormhole" and

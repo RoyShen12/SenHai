@@ -90,7 +90,10 @@ local PickUpForbidPrefabs = {
   reflectivevest = true,
   hawaiianshirt = true,
   beargervest = true,
-  cane = true
+  cane = true,
+  mandrake = true,
+  cookedmandrake = true,
+  mandrakesoup = true
 }
 local PickUpForbidPattern = {
   "_tacklesketch",
@@ -560,6 +563,7 @@ local function fn()
     return inst
   end
 
+  inst:AddComponent("tradable")
   inst:AddComponent("inspectable")
   inst:AddComponent("inventoryitem")
   inst:AddComponent("equippable")
