@@ -156,7 +156,8 @@ local PickUpForbidPrefabs = {
   rock_avocado_fruit_sprout = true,
   moonrockseed = true,
   bullkelp_beachedroot = true,
-  beef_bell = true
+  beef_bell = true,
+  moonrockidol = true
 }
 local PickUpForbidPattern = {
   "staff",
