@@ -307,6 +307,20 @@ for prefab, _ in pairs(GLOBAL.WeaponExpTable) do
   )
 end
 
+AddPrefabPostInit(
+  "armorruins",
+  function(inst)
+    inst.components.equippable.walkspeedmult = 1.05
+  end
+)
+
+AddPrefabPostInit(
+  "ruinshat",
+  function(inst)
+    inst.components.equippable.walkspeedmult = 1.05
+  end
+)
+
 -- GLOBAL.WeaponExpTable.senhai = 10
 
 GLOBAL.c_link = function(w1, w2)
