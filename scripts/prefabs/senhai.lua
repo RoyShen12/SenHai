@@ -523,7 +523,7 @@ local function GetPropertyWithLevel(level)
     damage = 12 + level * 3,
     range_base = 1.5 + math.min(10, level * 0.2),
     range_escape = 2.5 + math.min(12, 0.5 * level),
-    walkspeed_mult = math.min(2.55, math.floor(TUNING.CANE_SPEED_MULT * (100 + level * 4)) / 100),
+    walkspeedmult = math.min(2.55, math.floor(TUNING.CANE_SPEED_MULT * (100 + level * 4)) / 100),
     dapperness = TUNING.DAPPERNESS_MED * math.min(3, 0.5 + level * 0.06),
     light_radius = math.min(32, 2 + level * 1.5),
     light_falloff = math.max(0.8, 1.2 - level * 0.01),
@@ -602,7 +602,7 @@ local function OnGetItemFromPlayer(inst, giver, item)
   inst.shadow_healing_amount = properties.shadow_healing_amount
   inst.shadow_healing_cost = properties.shadow_healing_cost
 
-  inst.components.equippable.walkspeed_mult = properties.walkspeed_mult
+  inst.components.equippable.walkspeedmult = properties.walkspeedmult
   inst.components.equippable.dapperness = properties.dapperness
 
   ResetLight(
