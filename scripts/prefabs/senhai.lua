@@ -117,7 +117,10 @@ local PickUpForbidPrefabs = {
   cookedmandrake = true,
   mandrakesoup = true,
   cookbook = true,
-  fishingnet = true
+  fishingnet = true,
+  rock_avocado_fruit = true,
+  rock_avocado_fruit_sprout = true,
+  moonrockseed = true
 }
 local PickUpForbidPattern = {
   "_tacklesketch",
