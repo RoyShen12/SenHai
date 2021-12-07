@@ -148,6 +148,8 @@ GLOBAL.WeaponExpTable = {
   cutlichen = 1,
   cave_banana = 1,
   acorn = 1,
+  pinecone = 1,
+  twiggy_nut = 1,
   butterflywings = 1,
   hambat = 2,
   petals = 2,
@@ -184,6 +186,7 @@ GLOBAL.WeaponExpTable = {
   gunpowder = 3,
   goldnugget = 3,
   beefalowool = 3,
+  seeds = 3,
   whip = 4,
   nightmarefuel = 4,
   petals_evil = 4,
@@ -204,6 +207,7 @@ GLOBAL.WeaponExpTable = {
   cane = 5,
   fig = 5,
   boomerang = 5,
+  slurtleslime = 6,
   redgem = 6,
   bluegem = 6,
   purplegem = 7,
@@ -212,6 +216,14 @@ GLOBAL.WeaponExpTable = {
   yellowgem = 8,
   tentaclespike = 8,
   opalpreciousgem = 9,
+  corn_seeds = 10,
+  carrot_seeds = 10,
+  eggplant_seeds = 10,
+  pumpkin_seeds = 10,
+  pomegranate_seeds = 10,
+  durian_seeds = 10,
+  dragonfruit_seeds = 10,
+  watermelon_seeds = 10,
   amulet = 10,
   blowdart_pipe = 10,
   blowdart_sleep = 10,
@@ -260,10 +272,26 @@ GLOBAL.WeaponExpTable = {
   alterguardianhat = 150000
 }
 
+for num = 1, NUM_TRINKETS do
+  GLOBAL.WeaponExpTable["trinket_" .. tostring(num)] = function()
+    return math.random(10, 100)
+  end
+end
+
 setmetatable(
   GLOBAL.WeaponExpTable,
   {
     __index = function(t, k)
+      -- if string.find(k, "seeds") then
+      --   return 2
+      -- end
+      -- if string.match(k, ".*hat$") then
+      --   return 10
+      -- end
+      -- if string.match(k, "^armor.*") then
+      --   return 10
+      -- end
+
       return 0.1
     end
   }

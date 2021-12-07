@@ -117,7 +117,8 @@
         "SCALEMODE_FIXEDSCREEN_NONDYNAMIC",
         "EBSHOP",
         "SellRetryLoops",
-        "WeaponExpTable"
+        "WeaponExpTable",
+        "NUM_TRINKETS"
     ],
     "lua.targetVersion": "5.1",
     "search.exclude": {

@@ -82,8 +82,6 @@ local PickUpForbidPrefabs = {
   bugnet = true,
   trap = true,
   birdtrap = true,
-  opalstaff = true,
-  yellowstaff = true,
   chester_eyebone = true,
   glommerflower = true,
   lavae_egg = true,
@@ -93,7 +91,12 @@ local PickUpForbidPrefabs = {
   heatrock = true,
   -- flint = true,
   bedroll_straw = true,
+  bedroll_furry = true,
+  featherfan = true,
   tentaclespike = true,
+  batbat = true,
+  nightsword = true,
+  ruins_bat = true,
   -- spidereggsack = true,
   wetgoop = true,
   spoiled_food = true,
@@ -118,11 +121,44 @@ local PickUpForbidPrefabs = {
   mandrakesoup = true,
   cookbook = true,
   fishingnet = true,
+  mast_item = true,
+  mast_malbatross_item = true,
+  malbatross_feathered_weave = true,
+  oar = true,
+  oar_driftwood = true,
+  miniflare = true,
+  saltbox = true,
+  saddlehorn = true,
+  saddle_basic = true,
+  reviver = true,
+  diviningrod = true,
+  grass_umbrella = true,
+  umbrella = true,
+  waterballoon = true,
+  compass = true,
+  onemanband = true,
+  mapscroll = true,
+  waxwelljournal = true,
+  book_gardening = true,
+  book_birds = true,
+  book_sleep = true,
+  book_tentacles = true,
+  book_brimstone = true,
+  thurible = true,
+  saddle_war = true,
+  saddle_race = true,
+  trap_teeth = true,
+  beemine = true,
+  boomerang = true,
+  trap_teeth_maxwell = true,
+  beemine_maxwell = true,
   rock_avocado_fruit = true,
   rock_avocado_fruit_sprout = true,
-  moonrockseed = true
+  moonrockseed = true,
+  bullkelp_beachedroot = true
 }
 local PickUpForbidPattern = {
+  "staff",
   "_tacklesketch",
   "_sketch",
   "deer_antler",
@@ -458,6 +494,10 @@ end
 local function OnGetItemFromPlayer(inst, giver, item)
   if item and item.prefab ~= nil then
     local exp_get = WeaponExpTable[item.prefab]
+    if type(exp_get) == "function" then
+      exp_get = exp_get()
+    end
+
     inst.exp = inst.exp + exp_get
     ReportLevel(inst, giver, "  +" .. exp_get)
 
