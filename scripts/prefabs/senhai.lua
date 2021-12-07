@@ -317,11 +317,10 @@ local function FastRun(player, amount)
 end
 
 local function calcHealthDrain(inst, attacker, target)
-  return (inst.components.weapon.damage * 0.8 + attacker.components.combat.defaultdamage * 0.75 +
-    target.components.combat.defaultdamage * 0.05) *
-    (target:HasTag("epic") and 1.2 or 0.6) *
+  return (inst.components.weapon.damage + attacker.components.combat.defaultdamage) *
+    -- target.components.combat.defaultdamage * 0.05) *
+    -- (target:HasTag("epic") and 1.2 or 0.6) *
     (attacker.components.health:GetPercent() < 0.2 and 1.5 or 1) *
-    0.015 *
     inst.healthSteelRatio
 end
 
@@ -499,10 +498,10 @@ end
 local function GetPropertyWithLevel(level)
   return {
     pickUpRange = math.min(15, 4 + level * 0.5),
-    peridicHealCD = math.max(1, 10 - level * 0.5),
-    peridicHealAmount = 2 + math.floor((level + 5) * 0.5),
-    healHungerRate = math.max(1.2, 1.6 - level * 0.02),
-    healthSteelRatio = 0.1 + 0.1 * (level + 1),
+    peridicHealCD = math.max(1, 15 - level * 0.4),
+    peridicHealAmount = 1 + math.floor(level * 0.2),
+    healHungerRate = math.max(1.1, 1.6 - level * 0.02),
+    healthSteelRatio = math.min(0.75, (0.5 + 0.1 * (level + 1)) * 0.016),
     slowingRate = math.min(0.990, 0.1 + (level + 5) * 0.01),
     expFromHit = 5 + level * 3,
     speedUpAmount = math.min(4, 0.5 + level * 0.06),
@@ -683,7 +682,10 @@ local function fn()
                     string.format("%.1f", props.peridicHealAmount) ..
                       "/" ..
                         string.format("%.1f", props.peridicHealCD) ..
-                          "秒 (饥饿消耗比例: " .. string.format("%.2f", props.healHungerRate) .. ")"
+                          "秒 (饥饿消耗: 1:" ..
+                            string.format("%.2f", props.healHungerRate) ..
+                              ")\n吸血: " ..
+                                string.format("%.1f", props.healthSteelRatio * 100) .. "%"
   end
 
   -- c_find("senhai").displaynamefn = function(_i)return _i.name.."  Lv: ".._i.level:value().."\n".."攻击距离: "..TUNING.SenHai.range + math.min(10, _i.level:value() * 0.2) end
