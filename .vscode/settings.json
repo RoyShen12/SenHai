@@ -120,7 +120,8 @@
         "WeaponExpTable",
         "NUM_TRINKETS",
         "MakeInventoryFloatable",
-        "net_ushortint"
+        "net_ushortint",
+        "Ingredient"
     ],
     "lua.targetVersion": "5.1",
     "search.exclude": {
@@ -128,5 +129,8 @@
         "**/bower_components": true,
         "**/*.code-search": true,
         "**/.draft": true
-    }
+    },
+    "Lua.diagnostics.disable": [
+        "undefined-global"
+    ]
 }

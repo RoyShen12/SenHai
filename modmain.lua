@@ -38,41 +38,20 @@ TUNING.STARFISH_TRAP_NOTDAY_RESET = {
   VARIANCE = 2
 }
 
-TUNING.SenHai = {}
-
-TUNING.SenHai.storm_chance = GetModConfigData("StormChance")
-TUNING.SenHai.storm_range = GetModConfigData("StormRange")
-TUNING.SenHai.storm_damage_ratio = GetModConfigData("StormDamageRatio")
-TUNING.SenHai.range = GetModConfigData("Range")
-TUNING.SenHai.damage = GetModConfigData("Damage")
-
 STRINGS.NAMES.SENHAI = "猪刀森海" --名字
-STRINGS.RECIPE_DESC.SENHAI = "铸造一把猪刀" --配方上面的描述
+STRINGS.RECIPE_DESC.SENHAI = "铸造一把猪猪刀" --配方上面的描述
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.SENHAI = "粗~粗~粗~" --人物检查的描述
 
 Recipe(
     "senhai",
     {
-      Ingredient("twigs", 10)
+      Ingredient("torch", 1),
+      Ingredient("spear", 1),
+      Ingredient("pigskin", 1)
     },
     RECIPETABS.WAR,
     TECH.NONE
   ).atlas = "images/inventoryimages/senhai.xml"
-
--- AddPrefabPostInit(
---   "krampus_sack",
---   function(inst)
---     if TheWorld.ismastersim then
---       if not inst:HasTag("fridge") then
---         inst:AddTag("fridge")
---       end
-
---       if inst.components.equippable ~= nil then
---         inst.components.equippable.walkspeedmult = 1.05
---       end
---     end
---   end
--- )
 
 local containers = require("containers")
 
@@ -261,6 +240,8 @@ GLOBAL.WeaponExpTable = {
   greenstaff = 20,
   yellowstaff = 25,
   opalstaff = 30,
+  fossil_piece = 35,
+  fossil_piece_clean = 35,
   moonrocknugget = 40,
   moonglass = 100,
   thulecite = 100,
@@ -284,11 +265,9 @@ GLOBAL.WeaponExpTable = {
   expbean = 2000,
   dragon_scales = 2500,
   shroom_skin = 3500,
+  malbatross_beak = 5000,
+  malbatross_feather = 5000,
   minotaurhorn = 10000,
-  malbatross_beak = 30000,
-  malbatross_feather = 30000,
-  fossil_piece = 50000,
-  fossil_piece_clean = 50000,
   alterguardianhat = 150000
 }
 
@@ -328,7 +307,7 @@ for prefab, _ in pairs(GLOBAL.WeaponExpTable) do
   )
 end
 
-GLOBAL.WeaponExpTable.senhai = 10
+-- GLOBAL.WeaponExpTable.senhai = 10
 
 GLOBAL.c_link = function(w1, w2)
   if

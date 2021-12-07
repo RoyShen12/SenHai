@@ -4,8 +4,6 @@ local assets = {
   Asset("ATLAS", "images/inventoryimages/senhai.xml") --加载物品栏贴图
 }
 
-local lightIntensity = .92
-
 local function ResetLight(inst, i, f, r)
   inst.Light:SetIntensity(i)
   inst.Light:SetColour(215 / 255, 205 / 255, 255 / 255)
@@ -26,7 +24,7 @@ local function CreateLight()
   temp.entity:AddTransform()
   temp.entity:AddLight()
 
-  ResetLight(temp, lightIntensity, 1.2, 2)
+  ResetLight(temp, .92, 1.2, 2)
 
   return temp
 end
@@ -164,7 +162,9 @@ local PickUpForbidPrefabs = {
   bullkelp_beachedroot = true,
   beef_bell = true,
   moonrockidol = true,
-  blueprint = true
+  blueprint = true,
+  tacklecontainer = true,
+  supertacklecontainer = true
 }
 local PickUpForbidPattern = {
   "staff",
@@ -186,7 +186,7 @@ local function AutoPickup(inst, owner)
   end
 
   local x, y, z = owner.Transform:GetWorldPosition()
-  local ents = TheSim:FindEntities(x, y, z, inst.pickUpRange, PickUpMustTags, PickUpCanTags)
+  local ents = TheSim:FindEntities(x, y, z, inst.pick_up_range, PickUpMustTags, PickUpCanTags)
 
   local ba = owner:GetBufferedAction()
 
@@ -216,21 +216,8 @@ local function AutoPickup(inst, owner)
         end
       end
 
-      --Amulet will only ever pick up items one at a time. Even from stacks.
       SpawnPrefab("sand_puff").Transform:SetPosition(v.Transform:GetWorldPosition())
 
-      -- inst.components.finiteuses:Use(1)
-
-      -- local v_pos = v:GetPosition()
-      -- if v.components.stackable ~= nil then
-      --   v = v.components.stackable:Get()
-      -- end
-
-      -- if v.components.trap ~= nil and v.components.trap:IsSprung() then
-      --   v.components.trap:Harvest(owner)
-      -- else
-      --   owner.components.inventory:GiveItem(v, nil, v_pos)
-      -- end
       owner.components.inventory:GiveItem(v, nil, v:GetPosition())
 
       return
@@ -238,18 +225,16 @@ local function AutoPickup(inst, owner)
   end
 end
 
--- local sanityAmount = 5
--- local sanityHungerRate = 1.5
 local function autoHealAndRefresh(inst, owner)
   if
     (owner.components.health and owner.components.health:IsHurt() and not owner.components.oldager) and
       (owner.components.health:GetMaxWithPenalty() - owner.components.health.currenthealth >=
-        inst.peridicHealAmount) and
+        inst.peridic_heal_amount) and
       (owner.components.hunger and
-        owner.components.hunger.current > inst.peridicHealAmount * inst.healHungerRate)
+        owner.components.hunger.current > inst.peridic_heal_amount * inst.heal_hunger_rate)
    then
-    owner.components.health:DoDelta(inst.peridicHealAmount)
-    owner.components.hunger:DoDelta(-inst.peridicHealAmount * inst.healHungerRate)
+    owner.components.health:DoDelta(inst.peridic_heal_amount)
+    owner.components.hunger:DoDelta(-inst.peridic_heal_amount * inst.heal_hunger_rate)
   end
 
   -- if
@@ -273,13 +258,14 @@ local function OnPutInInventory(inst)
   inst._light.Light:Enable(true)
 end
 
-local function slowDown(player, target, slow_mult, duration)
+local function slowDownTarget(player, target, slow_mult, duration)
   if
     player and target and player.components.combat:IsValidTarget(target) and
       target.components.locomotor
    then
     if target:HasTag("epic") then
-      slow_mult = 1 - ((1 - slow_mult) * 0.2)
+      -- Boss has 1/3 effect
+      slow_mult = 1 - ((1 - slow_mult) * 0.33)
     end
 
     target.components.locomotor:SetExternalSpeedMultiplier(player, "senhai", slow_mult)
@@ -296,7 +282,7 @@ local function slowDown(player, target, slow_mult, duration)
   end
 end
 
-local function FastRunOn(player, amount)
+local function BoostOn(player, amount)
   pcall(
     function()
       local lc = player.components.locomotor
@@ -305,7 +291,7 @@ local function FastRunOn(player, amount)
     end
   )
 end
-local function FastRunOff(player, amount)
+local function BoostOff(player, amount)
   pcall(
     function()
       local lc = player.components.locomotor
@@ -315,13 +301,13 @@ local function FastRunOff(player, amount)
   )
 end
 
-local function FastRun(player, amount)
-  FastRunOn(player, amount)
+local function BoostSpeed(player, amount)
+  BoostOn(player, amount)
 
   player:DoTaskInTime(
     0.75,
     function()
-      FastRunOff(player, amount)
+      BoostOff(player, amount)
     end
   )
 end
@@ -331,11 +317,10 @@ local function calcHealthDrain(inst, attacker, target)
     -- target.components.combat.defaultdamage * 0.05) *
     -- (target:HasTag("epic") and 1.2 or 0.6) *
     (attacker.components.health:GetPercent() < 0.2 and 1.5 or 1) *
-    inst.healthSteelRatio
+    inst.health_steel_ratio
 end
 
 local function onattack(inst, attacker, target) -- inst, attacker, target, skipsanity
-  --加入冰杖效果
   inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
 
   if not target:IsValid() then
@@ -352,14 +337,15 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
   end
 
   if target.components.combat then
-    -- 吸血
+    -- E1 吸血
     attacker.components.health:DoDelta(calcHealthDrain(inst, attacker, target))
-    -- 吸血鬼的拥抱
-    if math.random() > 0.5 and #AllPlayers > 1 then
+    -- E2 吸血鬼的拥抱
+    if #AllPlayers > 1 and math.random(0, 100) > inst.shadow_healing_chance then
       for _, other_player in ipairs(AllPlayers) do
         if
           other_player ~= attacker and not other_player:HasTag("playerghost") and
-            attacker.components.sanity.current > 10 and
+            attacker.components.sanity.current > inst.shadow_healing_cost and
+            attacker.components.hunger.current > inst.shadow_healing_cost and
             other_player.components.health and
             not other_player.components.oldager and
             other_player.Transform and
@@ -371,19 +357,24 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
             attacker:GetDistanceSqToInst(other_player) < 900
          then
           ---@diagnostic disable-next-line: redundant-parameter
-          attacker.components.talker:Say("吸血鬼的拥抱")
-          attacker.components.sanity:DoDelta(-10)
-          attacker.components.hunger:DoDelta(-10)
+          attacker.components.talker:Say("吸血鬼的拥抱！")
+
+          attacker.components.sanity:DoDelta(-inst.shadow_healing_cost)
+          attacker.components.hunger:DoDelta(-inst.shadow_healing_cost)
+
+          SpawnPrefab("collapse_small").Transform:SetPosition(
+            other_player.Transform:GetWorldPosition()
+          )
 
           local HOT =
             attacker:DoPeriodicTask(
             0.1,
             function()
-              other_player.components.health:DoDelta(1)
+              other_player.components.health:DoDelta(inst.shadow_healing_amount)
             end
           )
           attacker:DoTaskInTime(
-            5,
+            1.2,
             function()
               HOT:Cancel()
             end
@@ -391,19 +382,19 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
         end
       end
     end
-    -- 减速
-    slowDown(attacker, target, 1 - inst.slowingRate, 2)
-    -- 几率 AOE
-    if TUNING.SenHai.storm_chance > 0 and math.random(0, 100) > (100 - TUNING.SenHai.storm_chance) then
+    -- E3 减速
+    slowDownTarget(attacker, target, 1 - inst.slowing_rate, inst.slowing_duration)
+    -- E4 几率 AOE
+    if inst.storm_chance > 0 and math.random(0, 100) > (100 - inst.storm_chance) then
       ---@diagnostic disable-next-line: redundant-parameter
       attacker.components.talker:Say("风暴！")
 
       local stormHitCount = 0
 
       local x, y, z = target.Transform:GetWorldPosition()
-      local ents = TheSim:FindEntities(x, y, z, TUNING.SenHai.storm_range + inst.storm_extra_range)
+      local ents = TheSim:FindEntities(x, y, z, inst.storm_range)
 
-      for k, v in pairs(ents) do
+      for _, v in pairs(ents) do
         if
           v ~= target and v:IsValid() and v.components.combat and
             attacker.components.combat:IsValidTarget(v) and
@@ -412,20 +403,21 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
             string.find(v.prefab, "wall") == nil
          then
           stormHitCount = stormHitCount + 1
+
           SpawnPrefab("explode_reskin").Transform:SetPosition(v.Transform:GetWorldPosition())
           -- SpawnPrefab("maxwell_smoke").Transform:SetPosition(v.Transform:GetWorldPosition())
           -- AOE damage
           v.components.combat:GetAttacked(
             attacker,
-            attacker.components.combat:CalcDamage(v, inst, TUNING.SenHai.storm_damage_ratio),
+            attacker.components.combat:CalcDamage(v, inst, inst.storm_damage_ratio),
             inst
           )
-          -- 少量附带吸血
+          -- 附带少量吸血 (1/4)
           attacker.components.health:DoDelta(
-            calcHealthDrain(inst, attacker, v) * TUNING.SenHai.storm_damage_ratio * 0.25
+            calcHealthDrain(inst, attacker, v) * inst.storm_damage_ratio * 0.25
           )
           -- 群体减速
-          slowDown(attacker, v, (1 - inst.slowingRate) * 1.1, 2)
+          slowDownTarget(attacker, v, (1 - inst.slowing_rate) * 1.1, inst.slowing_duration)
         end
       end
 
@@ -437,20 +429,22 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
         )
         stormHitCount = stormHitCount + 1
 
-        FastRun(attacker, inst.speedUpAmount)
+        BoostSpeed(attacker, inst.boost_speed_amount)
       end
     end
-    -- gain exp
+    -- E5 gain exp
     pcall(
       function()
-        if attacker.components.achievementmanager then
+        if attacker.components.achievementmanager and attacker.components.achievementmanager.sumexp then
           local old_say = attacker.components.talker.Say
           attacker.components.talker.Say = function()
           end
+
           attacker.components.achievementmanager:sumexp(
             attacker,
-            (target:HasTag("epic") and 3 or 1) * inst.expFromHit
+            (target:HasTag("epic") and 3 or 1) * inst.exp_from_hit
           )
+
           attacker.components.talker.Say = old_say
         end
       end
@@ -507,24 +501,33 @@ end
 
 local function GetPropertyWithLevel(level)
   return {
-    pickUpRange = math.min(15, 4 + level * 0.5),
-    peridicHealCD = math.max(1, 15 - level * 0.4),
-    peridicHealAmount = 1 + math.floor(level * 0.2),
-    healHungerRate = math.max(1.1, 1.6 - level * 0.02),
-    healthSteelRatio = math.min(0.75, (0.5 + 0.1 * (level + 1)) * 0.016),
-    slowingRate = math.min(0.990, 0.1 + (level + 5) * 0.01),
-    expFromHit = 5 + level * 3,
-    speedUpAmount = math.min(4, 0.5 + level * 0.06),
-    chopPower = math.min(20, 1 + level * 0.5),
-    minePower = math.min(20, 1 + level * 0.5),
-    Damage = TUNING.SenHai.damage + level * 5,
-    rangeBase = TUNING.SenHai.range + math.min(10, level * 0.2),
-    rangeEscape = TUNING.SenHai.range + math.min(12, 0.5 * (level + 2)),
-    storm_extra_range = math.min(9, level * 0.3),
-    walkspeedmult = math.min(2.55, math.floor(TUNING.CANE_SPEED_MULT * (100 + level * 5)) / 100),
-    dapperness = TUNING.DAPPERNESS_MED * math.min(3, 1 + level * 0.04),
+    pick_up_range = math.min(15, 2 + level * 0.3),
+    storm_chance = math.min(90, 10 + level * 2), -- 0~100
+    storm_range = 2 + math.min(12, level * 0.25),
+    storm_damage_ratio = math.min(2.0, 0.1 + level * 0.025), -- 0.0~1.0
+    peridic_heal_cd = math.max(1, 15 - level * 0.4),
+    peridic_heal_amount = 1 + math.floor(level * 0.2),
+    heal_hunger_rate = math.max(1.05, 1.6 - level * 0.01),
+    shadow_healing_chance = math.min(50, 5 + level * 0.65), -- 0~100
+    shadow_healing_amount = math.min(10, 1 + level * 0.2),
+    shadow_healing_cost = math.max(5, 10 - level * 0.12),
+    health_steel_ratio = math.min(0.75, (0.5 + 0.1 * (level + 1)) * 0.016),
+    slowing_rate = math.min(0.990, 0.1 + (level + 5) * 0.01),
+    slowing_duration = math.min(6, 0.75 + level * 0.1),
+    exp_from_hit = 5 + level * 3,
+    boost_speed_amount = math.min(4, 0.5 + level * 0.175),
+    chop_power = math.min(20, 1 + level * 0.5),
+    mine_power = math.min(20, 1 + level * 0.5),
+    oar_power = math.min(0.98, 0.2 + level * 0.01),
+    oar_max_velocity = math.min(15, 2 + level * 0.02),
+    damage = 12 + level * 3,
+    range_base = 1.5 + math.min(10, level * 0.2),
+    range_escape = 2.5 + math.min(12, 0.5 * level),
+    walkspeed_mult = math.min(2.55, math.floor(TUNING.CANE_SPEED_MULT * (100 + level * 4)) / 100),
+    dapperness = TUNING.DAPPERNESS_MED * math.min(3, 0.5 + level * 0.06),
     light_radius = math.min(32, 2 + level * 1.5),
-    light_falloff = math.max(0.8, 1.2 - level * 0.01)
+    light_falloff = math.max(0.8, 1.2 - level * 0.01),
+    light_intensity = math.min(0.97, 0.92 + level * 0.00125)
   }
 end
 
@@ -567,30 +570,47 @@ local function OnGetItemFromPlayer(inst, giver, item)
 
   local properties = GetPropertyWithLevel(inst.level:value())
 
-  inst.pickUpRange = properties.pickUpRange
+  inst.pick_up_range = properties.pick_up_range
 
-  inst.peridicHealCD = properties.peridicHealCD
-  inst.peridicHealAmount = properties.peridicHealAmount
-  inst.healHungerRate = properties.healHungerRate
+  inst.peridic_heal_cd = properties.peridic_heal_cd
+  inst.peridic_heal_amount = properties.peridic_heal_amount
+  inst.heal_hunger_rate = properties.heal_hunger_rate
 
-  inst.healthSteelRatio = properties.healthSteelRatio
-  inst.slowingRate = properties.slowingRate
-  inst.expFromHit = properties.expFromHit
+  inst.health_steel_ratio = properties.health_steel_ratio
 
-  inst.speedUpAmount = properties.speedUpAmount
+  inst.slowing_rate = properties.slowing_rate
+  inst.slowing_duration = properties.slowing_duration
 
-  inst.components.tool:SetAction(ACTIONS.CHOP, properties.chopPower)
-  inst.components.tool:SetAction(ACTIONS.MINE, properties.minePower)
+  inst.exp_from_hit = properties.exp_from_hit
 
-  inst.components.weapon:SetDamage(properties.Damage)
-  inst.components.weapon:SetRange(properties.rangeBase, properties.rangeEscape)
+  inst.boost_speed_amount = properties.boost_speed_amount
 
-  inst.storm_extra_range = properties.storm_extra_range
+  inst.components.tool:SetAction(ACTIONS.CHOP, properties.chop_power)
+  inst.components.tool:SetAction(ACTIONS.MINE, properties.mine_power)
 
-  inst.components.equippable.walkspeedmult = properties.walkspeedmult
+  inst.components.oar.force = properties.oar_power
+  inst.components.oar.max_velocity = properties.oar_max_velocity
+
+  inst.components.weapon:SetDamage(properties.damage)
+  inst.components.weapon:SetRange(properties.range_base, properties.range_escape)
+
+  inst.storm_chance = properties.storm_chance
+  inst.storm_range = properties.storm_range
+  inst.storm_damage_ratio = properties.storm_damage_ratio
+
+  inst.shadow_healing_chance = properties.shadow_healing_chance
+  inst.shadow_healing_amount = properties.shadow_healing_amount
+  inst.shadow_healing_cost = properties.shadow_healing_cost
+
+  inst.components.equippable.walkspeed_mult = properties.walkspeed_mult
   inst.components.equippable.dapperness = properties.dapperness
 
-  ResetLight(inst._light, lightIntensity, properties.light_falloff, properties.light_radius)
+  ResetLight(
+    inst._light,
+    properties.light_intensity,
+    properties.light_falloff,
+    properties.light_radius
+  )
 
   if giver ~= nil and item ~= nil then
     local OtherItems = giver.components.inventory:GetActiveItem()
@@ -610,7 +630,7 @@ local function onEquip(inst, owner) --装备
   owner.AnimState:Hide("ARM_normal")
 
   inst.task_pick = inst:DoPeriodicTask(PickUpCD, AutoPickup, nil, owner)
-  inst.task_heal = inst:DoPeriodicTask(inst.peridicHealCD, autoHealAndRefresh, nil, owner)
+  inst.task_heal = inst:DoPeriodicTask(inst.peridic_heal_cd, autoHealAndRefresh, nil, owner)
 end
 
 local function onUnequip(inst, owner) --解除装备
@@ -649,7 +669,48 @@ end
 local function OnLevelChange(inst)
   -- run on local
   local properties = GetPropertyWithLevel(inst.level:value())
-  ResetLight(inst._light, lightIntensity, properties.light_falloff, properties.light_radius)
+  ResetLight(
+    inst._light,
+    properties.light_intensity,
+    properties.light_falloff,
+    properties.light_radius
+  )
+end
+
+local function DisplayNameFx(inst)
+  local lv = inst.level:value()
+  local props = GetPropertyWithLevel(lv)
+
+  local name_with_lv = inst.name .. "  Lv: " .. lv
+  local slowing =
+    "攻击减速: " ..
+    string.format("%.1f", props.slowing_rate * 100) ..
+      "% (持续: " .. string.format("%.1f", props.slowing_duration) .. "秒)"
+  local pick_range = "拾取范围: " .. string.format("%.1f", props.pick_up_range)
+  local life_regen =
+    "生命回复: " ..
+    string.format("%.1f", props.peridic_heal_amount) ..
+      "/" ..
+        string.format("%.1f", props.peridic_heal_cd) ..
+          "秒 (饥饿消耗 1:" .. string.format("%.2f", props.heal_hunger_rate) .. ")"
+  local life_steel = "吸血: " .. string.format("%.1f", props.health_steel_ratio * 100) .. "%"
+  -- local light_desc = "照明范围: " .. string.format("%.0f", props.light_radius)
+  local storm =
+    "风暴: " ..
+    string.format("%.0f", props.storm_chance) ..
+      "% 几率对范围 " ..
+        string.format("%.1f", props.storm_range) ..
+          " 敌人造成 " .. string.format("%.0f", props.storm_damage_ratio * 100) .. "% 伤害"
+
+  return name_with_lv ..
+    "\n" ..
+      slowing ..
+        "\n" ..
+          pick_range ..
+            "\n" ..
+              life_steel ..
+                "\n" .. -- .. light_desc
+                  "\n" .. life_regen .. "\n" .. storm
 end
 
 local function fn()
@@ -689,29 +750,7 @@ local function fn()
   inst._light = CreateLight()
   inst._light.entity:SetParent(inst.entity)
 
-  inst.displaynamefn = function(__inst)
-    local lv = __inst.level:value()
-    local props = GetPropertyWithLevel(lv)
-
-    local name_with_lv = __inst.name .. "  Lv: " .. lv
-    local slowing = "攻击减速: " .. string.format("%.1f", props.slowingRate * 100) .. "%"
-    local pick_range = "拾取范围: " .. string.format("%.1f", props.pickUpRange)
-    local life_regen =
-      "生命回复: " ..
-      string.format("%.1f", props.peridicHealAmount) ..
-        "/" ..
-          string.format("%.1f", props.peridicHealCD) ..
-            "秒 (饥饿消耗 1:" .. string.format("%.2f", props.healHungerRate) .. ")"
-    local life_steel = "吸血: " .. string.format("%.1f", props.healthSteelRatio * 100) .. "%"
-    local light_desc = "照明范围: " .. string.format("%.0f", props.light_radius)
-
-    return name_with_lv ..
-      "\n" ..
-        slowing ..
-          "\n" .. pick_range .. "\n" .. life_steel .. "\n" .. light_desc .. "\n" .. life_regen
-  end
-
-  -- c_find("senhai").displaynamefn = function(_i)return _i.name.."  Lv: ".._i.level:value().."\n".."攻击距离: "..TUNING.SenHai.range + math.min(10, _i.level:value() * 0.2) end
+  inst.displaynamefn = DisplayNameFx
 
   if not TheWorld.ismastersim then
     inst:ListenForEvent("leveldirty", OnLevelChange)
@@ -719,7 +758,7 @@ local function fn()
     return inst
   end
 
-  inst:AddComponent("tradable")
+  -- inst:AddComponent("tradable")
   inst:AddComponent("inspectable")
   inst:AddComponent("inventoryitem")
   inst:AddComponent("equippable")
@@ -733,8 +772,6 @@ local function fn()
   inst:AddComponent("tool")
 
   inst:AddComponent("oar")
-  inst.components.oar.force = 0.95
-  inst.components.oar.max_velocity = 12
 
   inst.components.inventoryitem.atlasname = "images/inventoryimages/senhai.xml" --物品贴图
 
