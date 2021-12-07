@@ -155,7 +155,8 @@ local PickUpForbidPrefabs = {
   rock_avocado_fruit = true,
   rock_avocado_fruit_sprout = true,
   moonrockseed = true,
-  bullkelp_beachedroot = true
+  bullkelp_beachedroot = true,
+  beef_bell = true
 }
 local PickUpForbidPattern = {
   "staff",
@@ -611,8 +612,13 @@ local function fn()
 
   -- inst:AddTag("irreplaceable")
 
+  inst:AddTag("allow_action_on_impassable")
+
   inst:AddTag("icestaff")
   inst:AddTag("extinguisher")
+  -- inst:AddTag("waterproofer")
+
+  MakeInventoryFloatable(inst, "small", nil, 0.68)
 
   inst.entity:SetPristine()
 
@@ -635,6 +641,10 @@ local function fn()
   -- inst.components.weapon.onattack = onattack
 
   inst:AddComponent("tool")
+
+  inst:AddComponent("oar")
+  inst.components.oar.force = 0.95
+  inst.components.oar.max_velocity = 12
 
   inst.components.inventoryitem.atlasname = "images/inventoryimages/senhai.xml" --物品贴图
 

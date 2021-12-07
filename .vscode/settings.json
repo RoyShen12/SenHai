@@ -118,7 +118,8 @@
         "EBSHOP",
         "SellRetryLoops",
         "WeaponExpTable",
-        "NUM_TRINKETS"
+        "NUM_TRINKETS",
+        "MakeInventoryFloatable"
     ],
     "lua.targetVersion": "5.1",
     "search.exclude": {
