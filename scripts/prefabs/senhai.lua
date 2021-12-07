@@ -4,25 +4,31 @@ local assets = {
   Asset("ATLAS", "images/inventoryimages/senhai.xml") --加载物品栏贴图
 }
 
-local function CreateLight()
-  local inst = CreateEntity()
+local lightIntensity = .92
 
-  inst:AddTag("FX")
-  inst:AddTag("playerlight")
-  --[[Non-networked entity]]
-  inst.entity:SetCanSleep(false)
-  inst.persists = false
-
-  inst.entity:AddTransform()
-  inst.entity:AddLight()
-
-  inst.Light:SetIntensity(.8)
+local function ResetLight(inst, i, f, r)
+  inst.Light:SetIntensity(i)
   inst.Light:SetColour(215 / 255, 205 / 255, 255 / 255)
-  inst.Light:SetFalloff(.3)
-  inst.Light:SetRadius(2)
+  inst.Light:SetFalloff(f)
+  inst.Light:SetRadius(r)
   inst.Light:Enable(true)
+end
 
-  return inst
+local function CreateLight()
+  local temp = CreateEntity()
+
+  temp:AddTag("FX")
+  temp:AddTag("playerlight")
+  --[[Non-networked entity]]
+  temp.entity:SetCanSleep(false)
+  temp.persists = false
+
+  temp.entity:AddTransform()
+  temp.entity:AddLight()
+
+  ResetLight(temp, lightIntensity, 1.2, 2)
+
+  return temp
 end
 
 local PickUpMustTags = {"_inventoryitem"}
@@ -157,7 +163,8 @@ local PickUpForbidPrefabs = {
   moonrockseed = true,
   bullkelp_beachedroot = true,
   beef_bell = true,
-  moonrockidol = true
+  moonrockidol = true,
+  blueprint = true
 }
 local PickUpForbidPattern = {
   "staff",
@@ -168,7 +175,8 @@ local PickUpForbidPattern = {
   ".*hat$",
   "^armor.*",
   "trunkvest_",
-  "oceanfishingbobber_"
+  "oceanfishingbobber_",
+  "_blueprint"
 }
 local PickUpCD = 0.1
 
@@ -235,6 +243,8 @@ end
 local function autoHealAndRefresh(inst, owner)
   if
     (owner.components.health and owner.components.health:IsHurt() and not owner.components.oldager) and
+      (owner.components.health:GetMaxWithPenalty() - owner.components.health.currenthealth >=
+        inst.peridicHealAmount) and
       (owner.components.hunger and
         owner.components.hunger.current > inst.peridicHealAmount * inst.healHungerRate)
    then
@@ -309,7 +319,7 @@ local function FastRun(player, amount)
   FastRunOn(player, amount)
 
   player:DoTaskInTime(
-    0.5,
+    0.75,
     function()
       FastRunOff(player, amount)
     end
@@ -512,7 +522,9 @@ local function GetPropertyWithLevel(level)
     rangeEscape = TUNING.SenHai.range + math.min(12, 0.5 * (level + 2)),
     storm_extra_range = math.min(9, level * 0.3),
     walkspeedmult = math.min(2.55, math.floor(TUNING.CANE_SPEED_MULT * (100 + level * 5)) / 100),
-    dapperness = TUNING.DAPPERNESS_MED * math.min(3, 1 + level * 0.04)
+    dapperness = TUNING.DAPPERNESS_MED * math.min(3, 1 + level * 0.04),
+    light_radius = math.min(32, 2 + level * 1.5),
+    light_falloff = math.max(0.8, 1.2 - level * 0.01)
   }
 end
 
@@ -547,6 +559,8 @@ local function OnGetItemFromPlayer(inst, giver, item)
       inst.exp = inst.exp - LevelUpTable[inst.level:value() + 1]
       inst.level:set(inst.level:value() + 1)
 
+      inst.SoundEmitter:PlaySound("dontstarve/characters/wx78/levelup")
+
       ReportLevel(inst, giver, "  +" .. exp_get)
     end
   end
@@ -575,6 +589,8 @@ local function OnGetItemFromPlayer(inst, giver, item)
 
   inst.components.equippable.walkspeedmult = properties.walkspeedmult
   inst.components.equippable.dapperness = properties.dapperness
+
+  ResetLight(inst._light, lightIntensity, properties.light_falloff, properties.light_radius)
 
   if giver ~= nil and item ~= nil then
     local OtherItems = giver.components.inventory:GetActiveItem()
@@ -644,9 +660,6 @@ local function fn()
   inst.AnimState:SetBuild("senhai")
   inst.AnimState:PlayAnimation("idle")
 
-  inst._light = CreateLight()
-  inst._light.entity:SetParent(inst.entity)
-
   -- inst:AddTag("sharp") --武器的标签跟攻击方式跟攻击音效有关 没有特殊的话就用这两个
   -- inst:AddTag("pointy")
 
@@ -667,25 +680,29 @@ local function fn()
 
   inst.exp = 0
 
+  inst._light = CreateLight()
+  inst._light.entity:SetParent(inst.entity)
+
   inst.displaynamefn = function(__inst)
     local lv = __inst.level:value()
     local props = GetPropertyWithLevel(lv)
 
-    return __inst.name ..
-      "  Lv: " ..
-        lv ..
-          "\n攻击减速: " ..
-            string.format("%.1f", props.slowingRate * 100) ..
-              "%\n拾取范围: " ..
-                string.format("%.1f", props.pickUpRange) ..
-                  "\n生命回复: " ..
-                    string.format("%.1f", props.peridicHealAmount) ..
-                      "/" ..
-                        string.format("%.1f", props.peridicHealCD) ..
-                          "秒 (饥饿消耗: 1:" ..
-                            string.format("%.2f", props.healHungerRate) ..
-                              ")\n吸血: " ..
-                                string.format("%.1f", props.healthSteelRatio * 100) .. "%"
+    local name_with_lv = __inst.name .. "  Lv: " .. lv
+    local slowing = "攻击减速: " .. string.format("%.1f", props.slowingRate * 100) .. "%"
+    local pick_range = "拾取范围: " .. string.format("%.1f", props.pickUpRange)
+    local life_regen =
+      "生命回复: " ..
+      string.format("%.1f", props.peridicHealAmount) ..
+        "/" ..
+          string.format("%.1f", props.peridicHealCD) ..
+            "秒 (饥饿消耗 1:" .. string.format("%.2f", props.healHungerRate) .. ")"
+    local life_steel = "吸血: " .. string.format("%.1f", props.healthSteelRatio * 100) .. "%"
+    local light_desc = "照明范围: " .. string.format("%.0f", props.light_radius)
+
+    return name_with_lv ..
+      "\n" ..
+        slowing ..
+          "\n" .. pick_range .. "\n" .. life_steel .. "\n" .. light_desc .. "\n" .. life_regen
   end
 
   -- c_find("senhai").displaynamefn = function(_i)return _i.name.."  Lv: ".._i.level:value().."\n".."攻击距离: "..TUNING.SenHai.range + math.min(10, _i.level:value() * 0.2) end

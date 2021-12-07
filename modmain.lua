@@ -178,6 +178,7 @@ GLOBAL.WeaponExpTable = {
   mosquitosack = 2,
   sketch = 3,
   tacklesketch = 3,
+  blueprint = 3,
   nightstick = 3,
   lightbulb = 3,
   wormlight = 3,
