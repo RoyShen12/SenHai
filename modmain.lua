@@ -206,7 +206,6 @@ GLOBAL.WeaponExpTable = {
   orangegem = 8,
   yellowgem = 8,
   tentaclespike = 8,
-  opalpreciousgem = 9,
   corn_seeds = 10,
   carrot_seeds = 10,
   eggplant_seeds = 10,
@@ -268,6 +267,7 @@ GLOBAL.WeaponExpTable = {
   malbatross_beak = 5000,
   malbatross_feather = 5000,
   minotaurhorn = 10000,
+  opalpreciousgem = 30000,
   alterguardianhat = 150000
 }
 
