@@ -463,11 +463,12 @@ setmetatable(
   {
     __index = function(t, k)
       if type(k) == "number" then
-        return math.floor(
-          -6272.28633138961 + 2173.55677536105 * k - 277.323154161138 * math.pow(k, 2) +
-            15.7574193960469 * math.pow(k, 3) -
-            0.263861525485163 * math.pow(k, 4)
-        )
+        -- return math.floor(
+        --   -6272.28633138961 + 2173.55677536105 * k - 277.323154161138 * math.pow(k, 2) +
+        --     15.7574193960469 * math.pow(k, 3) -
+        --     0.263861525485163 * math.pow(k, 4)
+        -- )
+        return math.floor(25 * math.pow(k, 2) - 325 * k + 1250)
       else
         return nil
       end
@@ -479,7 +480,9 @@ local function ReportLevel(inst, player, extra)
   extra = extra or ""
 
   player.components.talker:Say(
-    "等级:   " .. inst.level .. "\n经验: " .. inst.exp .. " / " .. LevelUpTable[inst.level + 1] .. extra
+    "等级:   " ..
+      inst.level:value() ..
+        "\n经验: " .. inst.exp .. " / " .. LevelUpTable[inst.level:value() + 1] .. extra
   )
 end
 
@@ -493,6 +496,27 @@ local function AcceptTest(inst, item)
   return item and item.prefab ~= nil
 end
 
+local function GetPropertyWithLevel(level)
+  return {
+    pickUpRange = math.min(15, 4 + level * 0.5),
+    peridicHealCD = math.max(1, 10 - level * 0.5),
+    peridicHealAmount = 2 + math.floor((level + 5) * 0.5),
+    healHungerRate = math.max(1.2, 1.6 - level * 0.02),
+    healthSteelRatio = 0.1 + 0.1 * (level + 1),
+    slowingRate = math.min(0.990, 0.1 + (level + 5) * 0.01),
+    expFromHit = 5 + level * 3,
+    speedUpAmount = math.min(4, 0.5 + level * 0.06),
+    chopPower = math.min(20, 1 + level * 0.5),
+    minePower = math.min(20, 1 + level * 0.5),
+    Damage = TUNING.SenHai.damage + level * 5,
+    rangeBase = TUNING.SenHai.range + math.min(10, level * 0.2),
+    rangeEscape = TUNING.SenHai.range + math.min(12, 0.5 * (level + 2)),
+    storm_extra_range = math.min(9, level * 0.3),
+    walkspeedmult = math.min(2.55, math.floor(TUNING.CANE_SPEED_MULT * (100 + level * 5)) / 100),
+    dapperness = TUNING.DAPPERNESS_MED * math.min(3, 1 + level * 0.04)
+  }
+end
+
 local function OnGetItemFromPlayer(inst, giver, item)
   if item and item.prefab ~= nil then
     local exp_get = WeaponExpTable[item.prefab]
@@ -503,39 +527,55 @@ local function OnGetItemFromPlayer(inst, giver, item)
     inst.exp = inst.exp + exp_get
     ReportLevel(inst, giver, "  +" .. exp_get)
 
-    while inst.exp >= LevelUpTable[inst.level + 1] do
-      inst.exp = inst.exp - LevelUpTable[inst.level + 1]
-      inst.level = inst.level + 1
+    while inst.exp >= LevelUpTable[inst.level:value() + 1] do
+      -- while debug
+      -- print(
+      --   "[while debug] ",
+      --   "[giver]",
+      --   giver,
+      --   "[item]",
+      --   item,
+      --   "[exp_get]",
+      --   exp_get,
+      --   "[inst.exp]",
+      --   inst.exp,
+      --   "[inst.level]",
+      --   inst.level:value(),
+      --   "[LevelUpTable[inst.level+1]]",
+      --   LevelUpTable[inst.level:value() + 1]
+      -- )
+
+      inst.exp = inst.exp - LevelUpTable[inst.level:value() + 1]
+      inst.level:set(inst.level:value() + 1)
+
       ReportLevel(inst, giver, "  +" .. exp_get)
     end
   end
 
-  inst.pickUpRange = math.min(15, 4 + inst.level * 0.5)
+  local properties = GetPropertyWithLevel(inst.level:value())
 
-  inst.peridicHealCD = math.max(1, 10 - inst.level * 0.5)
-  inst.peridicHealAmount = 2 + math.floor((inst.level + 5) * 0.5)
-  inst.healHungerRate = math.max(1.2, 1.6 - inst.level * 0.02)
+  inst.pickUpRange = properties.pickUpRange
 
-  inst.healthSteelRatio = 0.1 + 0.1 * (inst.level + 1)
-  inst.slowingRate = math.min(0.990, 0.1 + (inst.level + 5) * 0.01)
-  inst.expFromHit = 5 + inst.level * 3
+  inst.peridicHealCD = properties.peridicHealCD
+  inst.peridicHealAmount = properties.peridicHealAmount
+  inst.healHungerRate = properties.healHungerRate
 
-  inst.speedUpAmount = math.min(4, 0.5 + inst.level * 0.06)
+  inst.healthSteelRatio = properties.healthSteelRatio
+  inst.slowingRate = properties.slowingRate
+  inst.expFromHit = properties.expFromHit
 
-  inst.components.tool:SetAction(ACTIONS.CHOP, math.min(20, 1 + inst.level * 0.5))
-  inst.components.tool:SetAction(ACTIONS.MINE, math.min(20, 1 + inst.level * 0.5))
+  inst.speedUpAmount = properties.speedUpAmount
 
-  inst.components.weapon:SetDamage(TUNING.SenHai.damage + inst.level * 5)
-  inst.components.weapon:SetRange(
-    TUNING.SenHai.range + math.min(10, inst.level * 0.2),
-    TUNING.SenHai.range + math.min(12, 0.5 * (inst.level + 2))
-  )
+  inst.components.tool:SetAction(ACTIONS.CHOP, properties.chopPower)
+  inst.components.tool:SetAction(ACTIONS.MINE, properties.minePower)
 
-  inst.storm_extra_range = math.min(9, inst.level * 0.3)
+  inst.components.weapon:SetDamage(properties.Damage)
+  inst.components.weapon:SetRange(properties.rangeBase, properties.rangeEscape)
 
-  inst.components.equippable.walkspeedmult =
-    math.min(2.55, math.floor(TUNING.CANE_SPEED_MULT * (100 + inst.level * 5)) / 100)
-  inst.components.equippable.dapperness = TUNING.DAPPERNESS_MED * math.min(3, 1 + inst.level * 0.04)
+  inst.storm_extra_range = properties.storm_extra_range
+
+  inst.components.equippable.walkspeedmult = properties.walkspeedmult
+  inst.components.equippable.dapperness = properties.dapperness
 
   if giver ~= nil and item ~= nil then
     local OtherItems = giver.components.inventory:GetActiveItem()
@@ -574,14 +614,14 @@ local function onUnequip(inst, owner) --解除装备
 end
 
 local function onsave(inst, data)
-  data.level = inst.level
+  data.level = inst.level:value()
   data.exp = inst.exp
 end
 
 local function onpreload(inst, data)
   if data then
     if data.level then
-      inst.level = data.level
+      inst.level:set(data.level)
     end
     if data.exp then
       inst.exp = data.exp
@@ -623,10 +663,34 @@ local function fn()
 
   inst.entity:SetPristine()
 
-  inst.level = 0
+  inst.level = net_ushortint(inst.GUID, "senhai._level", "leveldirty")
+  inst.level:set(0)
+
   inst.exp = 0
 
+  inst.displaynamefn = function(__inst)
+    local lv = __inst.level:value()
+    local props = GetPropertyWithLevel(lv)
+
+    return __inst.name ..
+      "  Lv: " ..
+        lv ..
+          "\n攻击减速: " ..
+            string.format("%.1f", props.slowingRate * 100) ..
+              "%\n拾取范围: " ..
+                string.format("%.1f", props.pickUpRange) ..
+                  "\n生命回复: " ..
+                    string.format("%.1f", props.peridicHealAmount) ..
+                      "/" ..
+                        string.format("%.1f", props.peridicHealCD) ..
+                          "秒 (饥饿消耗比例: " .. string.format("%.2f", props.healHungerRate) .. ")"
+  end
+
+  -- c_find("senhai").displaynamefn = function(_i)return _i.name.."  Lv: ".._i.level:value().."\n".."攻击距离: "..TUNING.SenHai.range + math.min(10, _i.level:value() * 0.2) end
+
   if not TheWorld.ismastersim then
+    -- inst:ListenForEvent("leveldirty", OnLevelChange)
+
     return inst
   end
 

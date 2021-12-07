@@ -262,6 +262,7 @@ GLOBAL.WeaponExpTable = {
   butter = 600,
   deerclops_eyeball = 1000,
   eyeturret_item = 1800,
+  expbean = 2000,
   dragon_scales = 2500,
   shroom_skin = 3500,
   minotaurhorn = 10000,
