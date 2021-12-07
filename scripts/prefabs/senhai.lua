@@ -646,6 +646,12 @@ local function onpreload(inst, data)
   end
 end
 
+local function OnLevelChange(inst)
+  -- run on local
+  local properties = GetPropertyWithLevel(inst.level:value())
+  ResetLight(inst._light, lightIntensity, properties.light_falloff, properties.light_radius)
+end
+
 local function fn()
   local inst = CreateEntity()
 
@@ -708,7 +714,7 @@ local function fn()
   -- c_find("senhai").displaynamefn = function(_i)return _i.name.."  Lv: ".._i.level:value().."\n".."攻击距离: "..TUNING.SenHai.range + math.min(10, _i.level:value() * 0.2) end
 
   if not TheWorld.ismastersim then
-    -- inst:ListenForEvent("leveldirty", OnLevelChange)
+    inst:ListenForEvent("leveldirty", OnLevelChange)
 
     return inst
   end
