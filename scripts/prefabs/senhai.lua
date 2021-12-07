@@ -340,7 +340,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
     -- E1 吸血
     attacker.components.health:DoDelta(calcHealthDrain(inst, attacker, target))
     -- E2 吸血鬼的拥抱
-    if #AllPlayers > 1 and math.random(0, 100) > inst.shadow_healing_chance then
+    if #AllPlayers > 1 and math.random(0, 100) > (100 - inst.shadow_healing_chance) then
       for _, other_player in ipairs(AllPlayers) do
         if
           other_player ~= attacker and not other_player:HasTag("playerghost") and
@@ -374,7 +374,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
             end
           )
           attacker:DoTaskInTime(
-            1.2,
+            1,
             function()
               HOT:Cancel()
             end
@@ -509,8 +509,8 @@ local function GetPropertyWithLevel(level)
     peridic_heal_amount = 1 + math.floor(level * 0.2),
     heal_hunger_rate = math.max(1.05, 1.6 - level * 0.01),
     shadow_healing_chance = math.min(50, 5 + level * 0.65), -- 0~100
-    shadow_healing_amount = math.min(10, 1 + level * 0.2),
-    shadow_healing_cost = math.max(5, 10 - level * 0.12),
+    shadow_healing_amount = math.min(10, 1 + level * 0.15),
+    shadow_healing_cost = math.max(5, 15 - level * 0.12),
     health_steel_ratio = math.min(0.75, (0.5 + 0.1 * (level + 1)) * 0.016),
     slowing_rate = math.min(0.990, 0.1 + (level + 5) * 0.01),
     slowing_duration = math.min(6, 0.75 + level * 0.1),
