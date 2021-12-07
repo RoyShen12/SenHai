@@ -1,9 +1,9 @@
-name = "猪刀森海"
+name = "猪猪杖"
 description = [[
-森域 X 海域
+Thanks for PM: 森域
 ]]
-author = "猪猪"
-version = "1.44"
+author = "Roy Shen"
+version = "1.45"
 forumthread = ""
 dst_compatible = true --兼容联机
 dont_starve_compatible = false --不兼容单机
