@@ -176,7 +176,8 @@ local PickUpForbidPattern = {
   "^armor.*",
   "trunkvest_",
   "oceanfishingbobber_",
-  "_blueprint"
+  "_blueprint",
+  "archive_lockbox"
 }
 local PickUpCD = 0.1
 
