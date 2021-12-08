@@ -321,6 +321,56 @@ local function calcHealthDrain(inst, attacker, target)
     inst.health_steel_ratio
 end
 
+local function DoSpikeAttack(
+  attacker,
+  center,
+  spike_amount,
+  damage,
+  latency,
+  dithering,
+  attack_radius)
+  local x, y, z = center.Transform:GetWorldPosition()
+  local inital_r = dithering or 2
+  x = GetRandomWithVariance(x, inital_r)
+  z = GetRandomWithVariance(z, inital_r)
+
+  local variations = {}
+
+  for i = 1, spike_amount do
+    table.insert(variations, i)
+  end
+
+  shuffleArray(variations)
+
+  local dtheta = PI * 2 / spike_amount
+
+  for i = 1, spike_amount do
+    local radius = dithering / 2 * 1.1 + math.random() * 1.75
+    local theta = i * dtheta + math.random() * dtheta * 0.8 + dtheta * 0.2
+    local x1 = x + radius * math.cos(theta)
+    local z1 = z + radius * math.sin(theta)
+    if
+      TheWorld.Map:IsVisualGroundAtPoint(x1, 0, z1) and
+        not TheWorld.Map:IsPointNearHole(Vector3(x1, 0, z1))
+     then
+      local spike = SpawnPrefab("moonspider_spike_senhai")
+      spike.attack_radius = attack_radius
+      spike.components.combat:SetDefaultDamage(damage)
+      spike.Transform:SetPosition(x1, 0, z1)
+      spike:SetOwner(attacker) -- inst.spider = attacker
+      spike.latency = latency
+
+      if variations[i + 1] ~= nil and variations[i + 1] ~= 1 and variations[i + 1] <= 5 then
+        spike.AnimState:OverrideSymbol(
+          "spike01",
+          "spider_spike",
+          "spike0" .. tostring(variations[i + 1])
+        )
+      end
+    end
+  end
+end
+
 local function onattack(inst, attacker, target) -- inst, attacker, target, skipsanity
   inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
 
@@ -385,7 +435,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
     end
     -- E3 减速
     slowDownTarget(attacker, target, 1 - inst.slowing_rate, inst.slowing_duration)
-    -- E4 几率 AOE
+    -- E4 风暴
     if inst.storm_chance > 0 and math.random(0, 100) > (100 - inst.storm_chance) then
       ---@diagnostic disable-next-line: redundant-parameter
       attacker.components.talker:Say("风暴！")
@@ -397,17 +447,20 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
 
       for _, v in pairs(ents) do
         if
-          v ~= target and v:IsValid() and v.components.combat and
+          v ~= target and v:IsValid() and not v:IsInLimbo() and v.components.combat and
+            not (v.components.health ~= nil and v.components.health:IsDead()) and
             attacker.components.combat:IsValidTarget(v) and
-            v:HasTag("monster") and
+            (v:HasTag("monster") or v.components.combat.target == attacker) and
             not v:HasTag("wall") and
-            string.find(v.prefab, "wall") == nil
+            string.find(v.prefab, "wall") == nil and
+            string.find(v.prefab, "fence") == nil
          then
           stormHitCount = stormHitCount + 1
 
           SpawnPrefab("explode_reskin").Transform:SetPosition(v.Transform:GetWorldPosition())
           -- SpawnPrefab("maxwell_smoke").Transform:SetPosition(v.Transform:GetWorldPosition())
           -- AOE damage
+          -- inst.components.weapon:LaunchProjectile(attacker, v)
           v.components.combat:GetAttacked(
             attacker,
             attacker.components.combat:CalcDamage(v, inst, inst.storm_damage_ratio),
@@ -419,6 +472,11 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
           )
           -- 群体减速
           slowDownTarget(attacker, v, (1 - inst.slowing_rate) * 1.1, inst.slowing_duration)
+
+          if math.random(0, 100) > 80 then
+            attacker.components.hunger:DoDelta(1)
+            attacker.components.sanity:DoDelta(1)
+          end
         end
       end
 
@@ -450,6 +508,18 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
         end
       end
     )
+    -- E6 地刺
+    if inst.spike_chance > 0 and math.random(0, 100) > (100 - inst.spike_chance) then
+      DoSpikeAttack(
+        attacker,
+        target,
+        inst.spike_amount,
+        inst.spike_damage,
+        inst.spike_latency,
+        inst.spike_radius * 2,
+        inst.spike_radius
+      )
+    end
   end
 end
 
@@ -503,9 +573,14 @@ end
 local function GetPropertyWithLevel(level)
   return {
     pick_up_range = math.min(15, 2 + level * 0.3),
-    storm_chance = math.min(90, 10 + level * 2), -- 0~100
+    storm_chance = math.min(90, 10 + level * 1.33), -- 0~100
     storm_range = 2 + math.min(12, level * 0.25),
     storm_damage_ratio = math.min(2.0, 0.1 + level * 0.025), -- 0.0~1.0
+    spike_chance = math.min(90, 5 + level * 1.31), -- 0~100
+    spike_amount = math.floor(2 + math.floor(level * 0.375 + 0.5) + 0.1),
+    spike_damage = 10 + level * 1.25,
+    spike_latency = math.max(0.2, 2 - level * 0.0375),
+    spike_radius = math.min(4, 1 + level * 0.045),
     peridic_heal_cd = math.max(1, 15 - level * 0.4),
     peridic_heal_amount = 1 + math.floor(level * 0.2),
     heal_hunger_rate = math.max(1.05, 1.6 - level * 0.01),
@@ -524,7 +599,7 @@ local function GetPropertyWithLevel(level)
     damage = 12 + level * 3,
     range_base = 1.5 + math.min(10, level * 0.2),
     range_escape = 2.5 + math.min(12, 0.5 * level),
-    walkspeedmult = math.min(2.55, math.floor(TUNING.CANE_SPEED_MULT * (100 + level * 4)) / 100),
+    walkspeedmult = math.min(2.55, math.floor(TUNING.CANE_SPEED_MULT * (100 + level * 1.75)) / 100),
     dapperness = TUNING.DAPPERNESS_MED * math.min(3, 0.5 + level * 0.06),
     light_radius = math.min(32, 2 + level * 1.5),
     light_falloff = math.max(0.8, 1.2 - level * 0.01),
@@ -598,6 +673,12 @@ local function OnGetItemFromPlayer(inst, giver, item)
   inst.storm_chance = properties.storm_chance
   inst.storm_range = properties.storm_range
   inst.storm_damage_ratio = properties.storm_damage_ratio
+
+  inst.spike_chance = properties.spike_chance
+  inst.spike_amount = properties.spike_amount
+  inst.spike_damage = properties.spike_damage
+  inst.spike_latency = properties.spike_latency
+  inst.spike_radius = properties.spike_radius
 
   inst.shadow_healing_chance = properties.shadow_healing_chance
   inst.shadow_healing_amount = properties.shadow_healing_amount
@@ -687,7 +768,7 @@ local function DisplayNameFx(inst)
     "攻击减速: " ..
     string.format("%.1f", props.slowing_rate * 100) ..
       "% (持续: " .. string.format("%.1f", props.slowing_duration) .. "秒)"
-  local pick_range = "拾取范围: " .. string.format("%.1f", props.pick_up_range)
+  local pick_range = "懒人拾取范围: " .. string.format("%.1f", props.pick_up_range)
   local life_regen =
     "生命回复: " ..
     string.format("%.1f", props.peridic_heal_amount) ..
@@ -697,11 +778,19 @@ local function DisplayNameFx(inst)
   local life_steel = "吸血: " .. string.format("%.1f", props.health_steel_ratio * 100) .. "%"
   -- local light_desc = "照明范围: " .. string.format("%.0f", props.light_radius)
   local storm =
-    "风暴: " ..
     string.format("%.0f", props.storm_chance) ..
-      "% 几率对范围 " ..
-        string.format("%.1f", props.storm_range) ..
-          " 敌人造成 " .. string.format("%.0f", props.storm_damage_ratio * 100) .. "% 伤害"
+    "% 几率召唤风暴，对范围 " ..
+      string.format("%.1f", props.storm_range) ..
+        " 敌人造成 " .. string.format("%.0f", props.storm_damage_ratio * 100) .. "% 伤害"
+  local spike =
+    string.format("%.0f", props.spike_chance) ..
+    "% 几率召唤 " ..
+      props.spike_amount ..
+        " 根地刺，延迟 " ..
+          string.format("%.1f", props.spike_latency) ..
+            " 秒后，每根对范围 " ..
+              string.format("%.1f", props.spike_radius) ..
+                " 敌人造成 " .. string.format("%.0f", props.spike_damage) .. " 伤害"
 
   return name_with_lv ..
     "\n" ..
@@ -711,7 +800,7 @@ local function DisplayNameFx(inst)
             "\n" ..
               life_steel ..
                 "\n" .. -- .. light_desc
-                  "\n" .. life_regen .. "\n" .. storm
+                  "\n" .. life_regen .. "\n" .. storm .. "\n" .. spike
 end
 
 local function fn()

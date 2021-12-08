@@ -8,7 +8,8 @@ GLOBAL.setmetatable(
 )
 
 PrefabFiles = {
-  "senhai"
+  "senhai",
+  "moonspider_spike_senhai"
 }
 
 -- 天气棒
@@ -154,6 +155,7 @@ GLOBAL.WeaponExpTable = {
   manrabbit_tail = 2,
   batwing = 2,
   spidergland = 2,
+  furtuft = 2,
   mosquitosack = 2,
   sketch = 3,
   tacklesketch = 3,
@@ -300,7 +302,7 @@ for prefab, _ in pairs(GLOBAL.WeaponExpTable) do
   AddPrefabPostInit(
     prefab,
     function(inst)
-      if not inst.components.tradable then
+      if TheWorld.ismastersim and not inst.components.tradable then
         inst:AddComponent("tradable")
       end
     end
@@ -310,14 +312,18 @@ end
 AddPrefabPostInit(
   "armorruins",
   function(inst)
-    inst.components.equippable.walkspeedmult = 1.05
+    if TheWorld.ismastersim then
+      inst.components.equippable.walkspeedmult = 1.05
+    end
   end
 )
 
 AddPrefabPostInit(
   "ruinshat",
   function(inst)
-    inst.components.equippable.walkspeedmult = 1.05
+    if TheWorld.ismastersim then
+      inst.components.equippable.walkspeedmult = 1.05
+    end
   end
 )
 
