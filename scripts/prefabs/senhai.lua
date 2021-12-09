@@ -29,6 +29,151 @@ local function CreateLight()
   return temp
 end
 
+local SummonsList = {
+  spider = 100,
+  spider_hider = 70,
+  spider_spitter = 50,
+  spider_warrior = 30,
+  spider_healer = 20
+  -- spiderqueen = 120
+}
+local SummonsNicknameList = {
+  spider = "小叽居",
+  spider_hider = "小龟缩叽居",
+  spider_spitter = "小吐网叽居",
+  spider_warrior = "小战斗叽居",
+  spider_healer = "小奶妈叽居"
+}
+local weight_total = 0
+for _, value in pairs(SummonsList) do
+  weight_total = weight_total + value
+end
+local acc = 0
+for key, value in pairs(SummonsList) do
+  local chance = value / weight_total
+  SummonsList[key] = acc + chance
+  acc = acc + chance
+end
+
+local function spawnSummons(inst, owner)
+  local x, y, z = owner.Transform:GetWorldPosition()
+
+  for old_summon, is_follower in pairs(owner.components.leader.followers) do
+    if is_follower and old_summon:IsValid() and old_summon.components.follower.leader == owner then
+      local inArr = false
+      for _, summon in ipairs(inst.Summons) do
+        if summon == old_summon then
+          inArr = true
+        end
+      end
+      if not inArr then
+        old_summon:Remove()
+      end
+    end
+  end
+
+  -- local creatures = TheSim:FindEntities(x, y, z, 15, nil, {"FX", "NOCLICK", "DECOR", "INLIMBO"})
+
+  -- for _, v in ipairs(creatures) do
+  --   if
+  --     v:IsValid() and v.prefab ~= nil and v.components and v.components.health and
+  --       not v.components.health:IsDead() and
+  --       v.components.follower and
+  --       v.components.follower.leader == owner
+  --    then
+  --     local inArr = false
+  --     for _, summon in ipairs(inst.Summons) do
+  --       if summon == v then
+  --         inArr = true
+  --       end
+  --     end
+  --     if not inArr then
+  --       v:Remove()
+  --     end
+  --   end
+  -- end
+
+  if #inst.Summons < inst.summon_amount then
+    local prefab = nil
+    local random = math.random()
+    for key, value in pairs(SummonsList) do
+      if random < value then
+        prefab = key
+        break
+      end
+    end
+
+    local summon = SpawnPrefab(prefab)
+    summon:AddTag("senhai_summons")
+    summon:RemoveTag("monster")
+    summon:RemoveTag("hostile")
+
+    summon.Transform:SetPosition(x + 3 * (math.random() - 0.5), y, z + 3 * (math.random() - 0.5))
+
+    if summon.components.follower == nil then
+      summon:AddComponent("follower")
+    end
+    summon.components.follower:SetLeader(owner)
+
+    if summon.components.halloweenmoonmutable ~= nil then
+      summon:RemoveComponent("halloweenmoonmutable")
+    end
+    if summon.components.sanityaura ~= nil then
+      summon:RemoveComponent("sanityaura")
+    end
+
+    if summon.components.lootdropper then
+      summon.components.lootdropper:SetLoot({})
+    end
+
+    if summon.components.eater then
+      summon.components.eater:SetStrongStomach(false)
+      summon.components.eater:SetCanEatRawMeat(false)
+    end
+
+    if summon.components.sleeper then
+      summon.components.sleeper.watchlight = true
+      summon.components.sleeper:SetResistance(10)
+    end
+
+    summon.components.locomotor.walkspeed =
+      summon.components.locomotor.walkspeed + inst.summon_speed_addition
+    summon.components.locomotor.runspeed =
+      summon.components.locomotor.runspeed + inst.summon_speed_addition
+    summon.components.combat:SetDefaultDamage(
+      summon.components.combat.defaultdamage + inst.summon_damage_addition
+    )
+    summon.components.combat:SetAttackPeriod(
+      summon.components.combat.min_attack_period * inst.summon_attack_period_mutl
+    )
+    summon.components.health:SetMaxHealth(
+      summon.components.health.maxhealth + inst.summon_health_addition
+    )
+    summon.components.health.externalabsorbmodifiers:SetModifier(owner, inst.summon_extra_armor)
+
+    if summon.components.named == nil then
+      summon:AddComponent("named")
+      summon.components.named:SetName(
+        SummonsNicknameList[summon.prefab] ..
+          "·" .. STRINGS.PIGNAMES[math.random(#STRINGS.PIGNAMES)] .. "  Lv: " .. inst.level:value()
+      )
+    end
+
+    summon:ListenForEvent(
+      "death",
+      function()
+        for index, ele in ipairs(inst.Summons) do
+          if ele == summon then
+            return table.remove(inst.Summons, index)
+          end
+        end
+      end
+    )
+
+    table.insert(inst.Summons, summon)
+  end
+end
+
 local PickUpMustTags = {"_inventoryitem"}
 local PickUpCanTags = {
   "INLIMBO",
@@ -181,7 +326,7 @@ local PickUpForbidPattern = {
 }
 local PickUpCD = 0.1
 
-local function AutoPickup(inst, owner)
+local function autoPickup(inst, owner)
   if owner == nil or owner.components.inventory == nil then
     return
   end
@@ -516,7 +661,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
         inst.spike_amount,
         inst.spike_damage,
         inst.spike_latency,
-        inst.spike_radius * 2,
+        inst.spike_radius * 1.2,
         inst.spike_radius
       )
     end
@@ -556,7 +701,8 @@ local function ReportLevel(inst, player, extra)
   player.components.talker:Say(
     "等级:   " ..
       inst.level:value() ..
-        "\n经验: " .. inst.exp .. " / " .. LevelUpTable[inst.level:value() + 1] .. extra
+        "\n经验: " ..
+          string.format("%.0f", inst.exp) .. " / " .. LevelUpTable[inst.level:value() + 1] .. extra
   )
 end
 
@@ -581,6 +727,13 @@ local function GetPropertyWithLevel(level)
     spike_damage = 10 + level * 1.25,
     spike_latency = math.max(0.2, 2 - level * 0.0375),
     spike_radius = math.min(4, 1 + level * 0.045),
+    summon_cd = math.max(8, 60 - math.floor(level * 0.85 + 0.5)),
+    summon_amount = math.min(5, 1 + math.floor(level * 0.06666667)),
+    summon_health_addition = level * 10,
+    summon_damage_addition = math.floor(level * 1.5),
+    summon_attack_period_mutl = math.max(0.5, 1 - level * 0.01),
+    summon_speed_addition = math.min(6, level * 0.1),
+    summon_extra_armor = math.min(0.4, level * 0.006667),
     peridic_heal_cd = math.max(1, 15 - level * 0.4),
     peridic_heal_amount = 1 + math.floor(level * 0.2),
     heal_hunger_rate = math.max(1.05, 1.6 - level * 0.01),
@@ -679,6 +832,14 @@ local function OnGetItemFromPlayer(inst, giver, item)
   inst.spike_damage = properties.spike_damage
   inst.spike_latency = properties.spike_latency
   inst.spike_radius = properties.spike_radius
+  inst.summon_extra_armor = properties.summon_extra_armor
+
+  inst.summon_cd = properties.summon_cd
+  inst.summon_amount = properties.summon_amount
+  inst.summon_health_addition = properties.summon_health_addition
+  inst.summon_damage_addition = properties.summon_damage_addition
+  inst.summon_attack_period_mutl = properties.summon_attack_period_mutl
+  inst.summon_speed_addition = properties.summon_speed_addition
 
   inst.shadow_healing_chance = properties.shadow_healing_chance
   inst.shadow_healing_amount = properties.shadow_healing_amount
@@ -711,8 +872,12 @@ local function onEquip(inst, owner) --装备
   owner.AnimState:Show("ARM_carry")
   owner.AnimState:Hide("ARM_normal")
 
-  inst.task_pick = inst:DoPeriodicTask(PickUpCD, AutoPickup, nil, owner)
+  inst.task_pick = inst:DoPeriodicTask(PickUpCD, autoPickup, nil, owner)
   inst.task_heal = inst:DoPeriodicTask(inst.peridic_heal_cd, autoHealAndRefresh, nil, owner)
+  inst.Summons = {}
+  if inst.summon_amount > 0 then
+    inst.task_spawning = inst:DoPeriodicTask(inst.summon_cd, spawnSummons, 0.1, owner)
+  end
 end
 
 local function onUnequip(inst, owner) --解除装备
@@ -727,6 +892,20 @@ local function onUnequip(inst, owner) --解除装备
   if inst.task_heal ~= nil then
     inst.task_heal:Cancel()
     inst.task_heal = nil
+  end
+
+  if inst.task_spawning ~= nil then
+    inst.task_spawning:Cancel()
+    inst.task_spawning = nil
+    for _, summon in ipairs(inst.Summons) do
+      inst:DoTaskInTime(
+        0.5,
+        function()
+          summon:Remove()
+        end
+      )
+    end
+    inst.Summons = {}
   end
 end
 
@@ -765,42 +944,49 @@ local function DisplayNameFx(inst)
 
   local name_with_lv = inst.name .. "  Lv: " .. lv
   local slowing =
-    "攻击减速: " ..
+    "\n攻击减速: " ..
     string.format("%.1f", props.slowing_rate * 100) ..
       "% (持续: " .. string.format("%.1f", props.slowing_duration) .. "秒)"
-  local pick_range = "懒人拾取范围: " .. string.format("%.1f", props.pick_up_range)
+  local pick_range = "\n懒人拾取范围: " .. string.format("%.1f", props.pick_up_range)
   local life_regen =
-    "生命回复: " ..
+    "\n生命回复: " ..
     string.format("%.1f", props.peridic_heal_amount) ..
       "/" ..
         string.format("%.1f", props.peridic_heal_cd) ..
           "秒 (饥饿消耗 1:" .. string.format("%.2f", props.heal_hunger_rate) .. ")"
-  local life_steel = "吸血: " .. string.format("%.1f", props.health_steel_ratio * 100) .. "%"
+  local life_steel = "\n吸血: " .. string.format("%.1f", props.health_steel_ratio * 100) .. "%"
   -- local light_desc = "照明范围: " .. string.format("%.0f", props.light_radius)
   local storm =
+    "\n" ..
     string.format("%.0f", props.storm_chance) ..
-    "% 几率召唤风暴，对范围 " ..
-      string.format("%.1f", props.storm_range) ..
-        " 敌人造成 " .. string.format("%.0f", props.storm_damage_ratio * 100) .. "% 伤害"
+      "% 几率召唤风暴，对范围 " ..
+        string.format("%.1f", props.storm_range) ..
+          " 敌人造成 " .. string.format("%.0f", props.storm_damage_ratio * 100) .. "% 伤害"
   local spike =
+    "\n" ..
     string.format("%.0f", props.spike_chance) ..
-    "% 几率召唤 " ..
-      props.spike_amount ..
-        " 根地刺，延迟 " ..
-          string.format("%.1f", props.spike_latency) ..
-            " 秒后，每根对范围 " ..
-              string.format("%.1f", props.spike_radius) ..
-                " 敌人造成 " .. string.format("%.0f", props.spike_damage) .. " 伤害"
+      "% 几率召唤 " ..
+        props.spike_amount ..
+          " 根地刺，延迟 " ..
+            string.format("%.1f", props.spike_latency) ..
+              " 秒后，每根对范围 " ..
+                string.format("%.1f", props.spike_radius) ..
+                  " 敌人造成 " .. string.format("%.0f", props.spike_damage) .. " 伤害"
+  local summon =
+    props.summon_amount > 0 and
+    ("\n每 " ..
+      string.format("%.0f", props.summon_cd) ..
+        " 秒召唤一个蜘蛛，上限 " ..
+          props.summon_amount ..
+            " 个 (蜘蛛获得 " ..
+              string.format("%.0f", props.summon_health_addition) ..
+                " 额外生命、" ..
+                  string.format("%.0f", props.summon_damage_addition) ..
+                    "额外伤害和" .. string.format("%.0f", props.summon_extra_armor * 100) .. "% 伤害吸收)") or
+    ""
 
   return name_with_lv ..
-    "\n" ..
-      slowing ..
-        "\n" ..
-          pick_range ..
-            "\n" ..
-              life_steel ..
-                "\n" .. -- .. light_desc
-                  "\n" .. life_regen .. "\n" .. storm .. "\n" .. spike
+    slowing .. pick_range .. life_steel .. life_regen .. storm .. spike .. summon
 end
 
 local function fn()
@@ -848,13 +1034,15 @@ local function fn()
     return inst
   end
 
+  inst.Summons = {}
+
   -- inst:AddComponent("tradable")
   inst:AddComponent("inspectable")
   inst:AddComponent("inventoryitem")
   inst:AddComponent("equippable")
 
   inst:AddComponent("weapon")
-  inst.components.weapon:SetProjectile("ice_projectile")
+  inst.components.weapon:SetProjectile("senhai_projectile")
 
   inst.components.weapon:SetOnAttack(onattack)
   -- inst.components.weapon.onattack = onattack

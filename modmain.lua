@@ -9,7 +9,8 @@ GLOBAL.setmetatable(
 
 PrefabFiles = {
   "senhai",
-  "moonspider_spike_senhai"
+  "moonspider_spike_senhai",
+  "senhai_projectile"
 }
 
 -- 天气棒
