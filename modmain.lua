@@ -343,3 +343,34 @@ GLOBAL.c_link = function(w1, w2)
     w2.components.teleporter.targetTeleporter = w1
   end
 end
+
+AddModRPCHandler(
+  "senhai",
+  "SwitchSummon",
+  function(player, senhai_inst)
+    -- print("recieve ModRPC senhai", ...)
+    if
+      senhai_inst.components.inventoryitem:GetGrandOwner() == player and
+        senhai_inst.components.equippable:IsEquipped() and
+        senhai_inst.summon_amount > 0
+     then
+      if senhai_inst.SummonEnabled then
+        player.components.talker:Say("禁用召唤功能")
+        senhai_inst.SummonEnabled = false
+
+        for _, summon in ipairs(senhai_inst.Summons) do
+          senhai_inst:DoTaskInTime(
+            math.random(),
+            function()
+              summon:Remove()
+            end
+          )
+        end
+        senhai_inst.Summons = {}
+      else
+        player.components.talker:Say("恢复召唤功能")
+        senhai_inst.SummonEnabled = true
+      end
+    end
+  end
+)

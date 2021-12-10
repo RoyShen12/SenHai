@@ -31,12 +31,13 @@ end
 
 local SummonsList = {
   spider = 100,
-  spider_hider = 70,
+  spider_hider = 20,
   spider_spitter = 50,
   spider_warrior = 30,
-  spider_healer = 20,
+  spider_healer = 10,
   hound = 100,
   icehound = 20
+  -- tallbird = 10
   -- spiderqueen = 120
 }
 local SummonsNicknameList = {
@@ -47,6 +48,7 @@ local SummonsNicknameList = {
   spider_healer = "小奶妈叽居",
   hound = "小汪汪",
   icehound = "小冰汪汪"
+  -- tallbird = "小鸟"
 }
 local weight_total = 0
 for _, value in pairs(SummonsList) do
@@ -97,7 +99,7 @@ local function spawnSummons(inst, owner)
   --   end
   -- end
 
-  if #inst.Summons < inst.summon_amount then
+  if inst.SummonEnabled and #inst.Summons < inst.summon_amount then
     local prefab = nil
     local random = math.random()
     for key, value in pairs(SummonsList) do
@@ -109,8 +111,20 @@ local function spawnSummons(inst, owner)
 
     local summon = SpawnPrefab(prefab)
 
+    summon.Transform:SetScale(.6, .6, .6)
+
     summon:AddTag("senhai_summons")
 
+    if not summon:HasTag("spider") then
+      summon:AddTag("spiderdisguise")
+    end
+    if not summon:HasTag("hound") then
+      summon:AddTag("houndfriend")
+    end
+
+    if summon:HasTag("trader") then
+      summon:RemoveTag("trader")
+    end
     if summon:HasTag("monster") then
       summon:RemoveTag("monster")
     end
@@ -126,6 +140,12 @@ local function spawnSummons(inst, owner)
     summon.components.follower:SetLeader(owner)
     summon.components.follower.maxfollowtime = nil
 
+    if summon.components.burnable then
+      summon.components.burnable.burntime = nil
+    end
+    if summon.components.freezable then
+      summon.components.freezable:SetResistance(100)
+    end
     if summon.components.halloweenmoonmutable ~= nil then
       summon:RemoveComponent("halloweenmoonmutable")
     end
@@ -164,6 +184,8 @@ local function spawnSummons(inst, owner)
       summon.components.health.maxhealth + inst.summon_health_addition
     )
     summon.components.health.externalabsorbmodifiers:SetModifier(owner, inst.summon_extra_armor)
+
+    summon.components.health:StartRegen(inst.summon_health_regen, 5, true)
 
     if summon.components.named == nil then
       summon:AddComponent("named")
@@ -744,6 +766,7 @@ local function GetPropertyWithLevel(level)
     summon_cd = math.max(8, 60 - math.floor(level * 0.85 + 0.5)),
     summon_amount = math.min(5, 1 + math.floor(level * 0.06666667)),
     summon_health_addition = level * 10,
+    summon_health_regen = math.floor(1 + level * 0.1 + 0.5),
     summon_damage_addition = math.floor(level * 1.5),
     summon_attack_period_mutl = math.max(0.5, 1 - level * 0.01),
     summon_speed_addition = math.min(6, level * 0.1),
@@ -854,6 +877,7 @@ local function OnGetItemFromPlayer(inst, giver, item)
   inst.summon_damage_addition = properties.summon_damage_addition
   inst.summon_attack_period_mutl = properties.summon_attack_period_mutl
   inst.summon_speed_addition = properties.summon_speed_addition
+  inst.summon_health_regen = properties.summon_health_regen
 
   inst.shadow_healing_chance = properties.shadow_healing_chance
   inst.shadow_healing_amount = properties.shadow_healing_amount
@@ -913,7 +937,7 @@ local function onUnequip(inst, owner) --解除装备
     inst.task_spawning = nil
     for _, summon in ipairs(inst.Summons) do
       inst:DoTaskInTime(
-        0.5,
+        math.random(),
         function()
           summon:Remove()
         end
@@ -1045,10 +1069,36 @@ local function fn()
   if not TheWorld.ismastersim then
     inst:ListenForEvent("leveldirty", OnLevelChange)
 
+    TheInput:AddKeyDownHandler(
+      KEY_T,
+      function()
+        if ThePlayer == nil then
+          return
+        end
+
+        local ActiveScreen = TheFrontEnd:GetActiveScreen()
+        local Name = ActiveScreen and ActiveScreen.name or ""
+        if Name:find("HUD") == nil then
+          return
+        end
+
+        if not inst.replica.inventoryitem:IsGrandOwner(ThePlayer) then
+          return
+        end
+
+        if not inst.replica.equippable:IsEquipped() then
+          return
+        end
+
+        SendModRPCToServer(MOD_RPC.senhai.SwitchSummon, inst)
+      end
+    )
+
     return inst
   end
 
   inst.Summons = {}
+  inst.SummonEnabled = true
 
   -- inst:AddComponent("tradable")
   inst:AddComponent("inspectable")
