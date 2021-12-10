@@ -34,7 +34,9 @@ local SummonsList = {
   spider_hider = 70,
   spider_spitter = 50,
   spider_warrior = 30,
-  spider_healer = 20
+  spider_healer = 20,
+  hound = 100,
+  icehound = 20
   -- spiderqueen = 120
 }
 local SummonsNicknameList = {
@@ -42,7 +44,9 @@ local SummonsNicknameList = {
   spider_hider = "小龟缩叽居",
   spider_spitter = "小吐网叽居",
   spider_warrior = "小战斗叽居",
-  spider_healer = "小奶妈叽居"
+  spider_healer = "小奶妈叽居",
+  hound = "小汪汪",
+  icehound = "小冰汪"
 }
 local weight_total = 0
 for _, value in pairs(SummonsList) do
@@ -153,11 +157,11 @@ local function spawnSummons(inst, owner)
 
     if summon.components.named == nil then
       summon:AddComponent("named")
-      summon.components.named:SetName(
-        SummonsNicknameList[summon.prefab] ..
-          "·" .. STRINGS.PIGNAMES[math.random(#STRINGS.PIGNAMES)] .. "  Lv: " .. inst.level:value()
-      )
     end
+    summon.components.named:SetName(
+      SummonsNicknameList[summon.prefab] ..
+        "·" .. STRINGS.PIGNAMES[math.random(#STRINGS.PIGNAMES)] .. "  Lv: " .. inst.level:value()
+    )
 
     summon:ListenForEvent(
       "death",
@@ -976,9 +980,9 @@ local function DisplayNameFx(inst)
     props.summon_amount > 0 and
     ("\n每 " ..
       string.format("%.0f", props.summon_cd) ..
-        " 秒召唤一个蜘蛛，上限 " ..
+        " 秒召唤一个伙伴，上限 " ..
           props.summon_amount ..
-            " 个 (蜘蛛获得 " ..
+            " 个 (伙伴获得 " ..
               string.format("%.0f", props.summon_health_addition) ..
                 " 额外生命、" ..
                   string.format("%.0f", props.summon_damage_addition) ..
