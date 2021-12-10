@@ -46,7 +46,7 @@ local SummonsNicknameList = {
   spider_warrior = "小战斗叽居",
   spider_healer = "小奶妈叽居",
   hound = "小汪汪",
-  icehound = "小冰汪"
+  icehound = "小冰汪汪"
 }
 local weight_total = 0
 for _, value in pairs(SummonsList) do
@@ -108,9 +108,15 @@ local function spawnSummons(inst, owner)
     end
 
     local summon = SpawnPrefab(prefab)
+
     summon:AddTag("senhai_summons")
-    summon:RemoveTag("monster")
-    summon:RemoveTag("hostile")
+
+    if summon:HasTag("monster") then
+      summon:RemoveTag("monster")
+    end
+    if summon:HasTag("hostile") then
+      summon:RemoveTag("hostile")
+    end
 
     summon.Transform:SetPosition(x + 3 * (math.random() - 0.5), y, z + 3 * (math.random() - 0.5))
 
@@ -118,9 +124,13 @@ local function spawnSummons(inst, owner)
       summon:AddComponent("follower")
     end
     summon.components.follower:SetLeader(owner)
+    summon.components.follower.maxfollowtime = nil
 
     if summon.components.halloweenmoonmutable ~= nil then
       summon:RemoveComponent("halloweenmoonmutable")
+    end
+    if summon.components.trader ~= nil then
+      summon:RemoveComponent("trader")
     end
     if summon.components.sanityaura ~= nil then
       summon:RemoveComponent("sanityaura")
