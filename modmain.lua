@@ -115,31 +115,45 @@ setmetatable(
   GLOBAL.WeaponExpTable,
   {
     __index = function(t, k)
-      -- if string.find(k, "seeds") then
-      --   return 2
-      -- end
-      -- if string.match(k, ".*hat$") then
-      --   return 10
-      -- end
-      -- if string.match(k, "^armor.*") then
-      --   return 10
-      -- end
+      if string.match(k, ".*hat$") or string.match(k, "^armor.*") then
+        return math.random(10, 50)
+      end
+
+      if string.match(k, ".*mooneye$") then
+        return 50
+      end
+
+      if string.match(k, "^book_.*") then
+        return 20
+      end
+
+      if string.match(k, "^wall.*item$") then
+        return 15
+      end
+
+      if string.match(k, "^oceanfish_small_%d_inv$") then
+        return math.random(60, 120)
+      end
+
+      if string.match(k, "^oceanfish_medium_%d_inv$") then
+        return math.random(120, 240)
+      end
 
       return 0.1
     end
   }
 )
 
-for prefab, _ in pairs(GLOBAL.WeaponExpTable) do
-  AddPrefabPostInit(
-    prefab,
-    function(inst)
-      if TheWorld.ismastersim and not inst.components.tradable then
-        inst:AddComponent("tradable")
-      end
-    end
-  )
-end
+-- for prefab, _ in pairs(GLOBAL.WeaponExpTable) do
+--   AddPrefabPostInit(
+--     prefab,
+--     function(inst)
+--       if TheWorld.ismastersim and not inst.components.tradable then
+--         inst:AddComponent("tradable")
+--       end
+--     end
+--   )
+-- end
 
 AddPrefabPostInit(
   "armorruins",

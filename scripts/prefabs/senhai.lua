@@ -320,14 +320,7 @@ local function calcHealthDrain(inst, attacker, target)
     inst.health_steel_ratio
 end
 
-local function DoSpikeAttack(
-  attacker,
-  center,
-  spike_amount,
-  damage,
-  latency,
-  dithering,
-  attack_radius)
+local function DoSpikeAttack(attacker, center, amount, damage, latency, dithering, attack_radius)
   local x, y, z = center.Transform:GetWorldPosition()
   local inital_r = dithering or 2
   x = GetRandomWithVariance(x, inital_r)
@@ -335,15 +328,15 @@ local function DoSpikeAttack(
 
   local variations = {}
 
-  for i = 1, spike_amount do
+  for i = 1, amount do
     table.insert(variations, i)
   end
 
   shuffleArray(variations)
 
-  local dtheta = PI * 2 / spike_amount
+  local dtheta = PI * 2 / amount
 
-  for i = 1, spike_amount do
+  for i = 1, amount do
     local radius = dithering / 2 * 1.1 + math.random() * 1.75
     local theta = i * dtheta + math.random() * dtheta * 0.8 + dtheta * 0.2
     local x1 = x + radius * math.cos(theta)
@@ -512,7 +505,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
       DoSpikeAttack(
         attacker,
         target,
-        inst.spike_amount,
+        math.random(inst.spike_amount_lower, inst.spike_amount_upper),
         inst.spike_damage,
         inst.spike_latency,
         inst.spike_radius * 1.2,
@@ -638,11 +631,11 @@ local function OnGetItemFromPlayer(inst, giver, item)
   inst.storm_damage_ratio = properties.storm_damage_ratio
 
   inst.spike_chance = properties.spike_chance
-  inst.spike_amount = properties.spike_amount
+  inst.spike_amount_upper = properties.spike_amount_upper
+  inst.spike_amount_lower = properties.spike_amount_lower
   inst.spike_damage = properties.spike_damage
   inst.spike_latency = properties.spike_latency
   inst.spike_radius = properties.spike_radius
-  inst.summon_extra_armor = properties.summon_extra_armor
 
   inst.summon_cd = properties.summon_cd
   inst.summon_amount = properties.summon_amount
@@ -650,6 +643,7 @@ local function OnGetItemFromPlayer(inst, giver, item)
   inst.summon_damage_addition = properties.summon_damage_addition
   inst.summon_attack_period_mutl = properties.summon_attack_period_mutl
   inst.summon_speed_addition = properties.summon_speed_addition
+  inst.summon_extra_armor = properties.summon_extra_armor
   inst.summon_health_regen = properties.summon_health_regen
 
   inst.shadow_healing_chance = properties.shadow_healing_chance
@@ -756,7 +750,7 @@ local function DisplayNameFx(inst)
   local name_with_lv = inst.name .. "  Lv: " .. lv
   local slowing =
     "\n攻击减速: " ..
-    string.format("%.1f", props.slowing_rate * 100) ..
+    string.format("%.0f", props.slowing_rate * 100) ..
       "% (持续: " .. string.format("%.1f", props.slowing_duration) .. "秒)"
   local pick_range = "\n懒人拾取范围: " .. string.format("%.1f", props.pick_up_range)
   local life_regen =
@@ -777,12 +771,14 @@ local function DisplayNameFx(inst)
     "\n" ..
     string.format("%.0f", props.spike_chance) ..
       "% 几率召唤 " ..
-        props.spike_amount ..
-          " 根地刺，延迟 " ..
-            string.format("%.1f", props.spike_latency) ..
-              " 秒后，每根对范围 " ..
-                string.format("%.1f", props.spike_radius) ..
-                  " 敌人造成 " .. string.format("%.0f", props.spike_damage) .. " 伤害"
+        props.spike_amount_lower ..
+          "~" ..
+            props.spike_amount_upper ..
+              " 根地刺，延迟 " ..
+                string.format("%.1f", props.spike_latency) ..
+                  " 秒后，每根对范围 " ..
+                    string.format("%.1f", props.spike_radius) ..
+                      " 敌人造成 " .. string.format("%.0f", props.spike_damage) .. " 伤害"
   local summon =
     props.summon_amount > 0 and
     ("\n每 " ..
@@ -905,6 +901,7 @@ local function fn()
   inst:ListenForEvent("equipped", OnGetItemFromPlayer)
 
   inst:AddComponent("trader")
+  inst.components.trader.acceptnontradable = true
   inst.components.trader:SetAcceptTest(AcceptTest)
   inst.components.trader.onaccept = OnGetItemFromPlayer
   inst.components.trader.onrefuse = OnRefuseItem
