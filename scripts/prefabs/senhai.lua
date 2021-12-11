@@ -1,3 +1,5 @@
+local GetPropertyWithLevel = require("numerical").GetPropertyWithLevel
+
 local assets = {
   Asset("ANIM", "anim/senhai.zip"), --地上的动画
   Asset("ANIM", "anim/swap_senhai.zip"),
@@ -29,37 +31,8 @@ local function CreateLight()
   return temp
 end
 
-local SummonsList = {
-  spider = 100,
-  spider_hider = 20,
-  spider_spitter = 50,
-  spider_warrior = 30,
-  spider_healer = 10,
-  hound = 100,
-  icehound = 20
-  -- tallbird = 10
-  -- spiderqueen = 120
-}
-local SummonsNicknameList = {
-  spider = "小叽居",
-  spider_hider = "小龟缩叽居",
-  spider_spitter = "小吐网叽居",
-  spider_warrior = "小战斗叽居",
-  spider_healer = "小奶妈叽居",
-  hound = "小汪汪",
-  icehound = "小冰汪汪"
-  -- tallbird = "小鸟"
-}
-local weight_total = 0
-for _, value in pairs(SummonsList) do
-  weight_total = weight_total + value
-end
-local acc = 0
-for key, value in pairs(SummonsList) do
-  local chance = value / weight_total
-  SummonsList[key] = acc + chance
-  acc = acc + chance
-end
+local SummonsList = require("custom-constants").SummonsList
+local SummonsNicknameList = require("custom-constants").SummonsNicknameList
 
 local function spawnSummons(inst, owner)
   local x, y, z = owner.Transform:GetWorldPosition()
@@ -77,27 +50,6 @@ local function spawnSummons(inst, owner)
       end
     end
   end
-
-  -- local creatures = TheSim:FindEntities(x, y, z, 15, nil, {"FX", "NOCLICK", "DECOR", "INLIMBO"})
-
-  -- for _, v in ipairs(creatures) do
-  --   if
-  --     v:IsValid() and v.prefab ~= nil and v.components and v.components.health and
-  --       not v.components.health:IsDead() and
-  --       v.components.follower and
-  --       v.components.follower.leader == owner
-  --    then
-  --     local inArr = false
-  --     for _, summon in ipairs(inst.Summons) do
-  --       if summon == v then
-  --         inArr = true
-  --       end
-  --     end
-  --     if not inArr then
-  --       v:Remove()
-  --     end
-  --   end
-  -- end
 
   if inst.SummonEnabled and #inst.Summons < inst.summon_amount then
     local prefab = nil
@@ -211,7 +163,7 @@ local function spawnSummons(inst, owner)
 end
 
 local PickUpMustTags = {"_inventoryitem"}
-local PickUpCanTags = {
+local PickUpCanNotTags = {
   "INLIMBO",
   "NOCLICK",
   "knockbackdelayinteraction",
@@ -219,147 +171,13 @@ local PickUpCanTags = {
   "fire",
   "minesprung",
   "mineactive",
-  "spider"
+  "spider",
+  "tool",
+  "weapon",
+  "light"
 }
-local PickUpForbidPrefabs = {
-  spear = true,
-  spear_wathgrithr = true,
-  torch = true,
-  axe = true,
-  goldenaxe = true,
-  pickaxe = true,
-  goldenpickaxe = true,
-  shovel = true,
-  goldenshovel = true,
-  hammer = true,
-  multitool_axe_pickaxe = true,
-  pitchfork = true,
-  razor = true,
-  featherpencil = true,
-  fishingrod = true,
-  oceanfishingrod = true,
-  panflute = true,
-  lantern = true,
-  pumpkin_lantern = true,
-  brush = true,
-  farm_hoe = true,
-  golden_farm_hoe = true,
-  wateringcan = true,
-  premiumwateringcan = true,
-  tillweedsalve = true,
-  seedpouch = true,
-  compostingbin = true,
-  plantregistryhat = true,
-  nutrientsgoggleshat = true,
-  trophyscale_oversizedveggies = true,
-  book_horticulture = true,
-  book_silviculture = true,
-  fruitfly = true,
-  lordfruitfly = true,
-  friendlyfruitfly = true,
-  fruitflyfruit = true,
-  farm_soil_debris = true,
-  soil_amender = true,
-  soil_amender_fermented = true,
-  compost = true,
-  compostwrap = true,
-  fertilizer = true,
-  bugnet = true,
-  trap = true,
-  birdtrap = true,
-  chester_eyebone = true,
-  glommerflower = true,
-  lavae_egg = true,
-  lavae_cocoon = true,
-  glommerfuel = true,
-  horn = true,
-  heatrock = true,
-  -- flint = true,
-  bedroll_straw = true,
-  bedroll_furry = true,
-  featherfan = true,
-  tentaclespike = true,
-  batbat = true,
-  nightsword = true,
-  ruins_bat = true,
-  -- spidereggsack = true,
-  wetgoop = true,
-  spoiled_food = true,
-  sketch = true,
-  amulet = true,
-  glommerwings = true,
-  bernie_inactive = true,
-  lighter = true,
-  abigail_flower = true,
-  lucy = true,
-  reskin_tool = true,
-  terrarium = true,
-  tacklesketch = true,
-  raincoat = true,
-  sweatervest = true,
-  reflectivevest = true,
-  hawaiianshirt = true,
-  beargervest = true,
-  cane = true,
-  mandrake = true,
-  cookedmandrake = true,
-  mandrakesoup = true,
-  cookbook = true,
-  fishingnet = true,
-  mast_item = true,
-  mast_malbatross_item = true,
-  malbatross_feathered_weave = true,
-  oar = true,
-  oar_driftwood = true,
-  miniflare = true,
-  saltbox = true,
-  saddlehorn = true,
-  saddle_basic = true,
-  reviver = true,
-  diviningrod = true,
-  grass_umbrella = true,
-  umbrella = true,
-  waterballoon = true,
-  compass = true,
-  onemanband = true,
-  mapscroll = true,
-  waxwelljournal = true,
-  book_gardening = true,
-  book_birds = true,
-  book_sleep = true,
-  book_tentacles = true,
-  book_brimstone = true,
-  thurible = true,
-  saddle_war = true,
-  saddle_race = true,
-  trap_teeth = true,
-  beemine = true,
-  boomerang = true,
-  trap_teeth_maxwell = true,
-  beemine_maxwell = true,
-  rock_avocado_fruit = true,
-  rock_avocado_fruit_sprout = true,
-  moonrockseed = true,
-  bullkelp_beachedroot = true,
-  beef_bell = true,
-  moonrockidol = true,
-  blueprint = true,
-  tacklecontainer = true,
-  supertacklecontainer = true
-}
-local PickUpForbidPattern = {
-  "staff",
-  "_tacklesketch",
-  "_sketch",
-  "deer_antler",
-  "blowdart_",
-  ".*hat$",
-  "^armor.*",
-  "trunkvest_",
-  "oceanfishingbobber_",
-  "_blueprint",
-  "archive_lockbox"
-}
+local PickUpForbidPrefabs = require("custom-constants").PickUpForbidPrefabs
+local PickUpForbidPattern = require("custom-constants").PickUpForbidPattern
 local PickUpCD = 0.1
 
 local function autoPickup(inst, owner)
@@ -368,7 +186,7 @@ local function autoPickup(inst, owner)
   end
 
   local x, y, z = owner.Transform:GetWorldPosition()
-  local ents = TheSim:FindEntities(x, y, z, inst.pick_up_range, PickUpMustTags, PickUpCanTags)
+  local ents = TheSim:FindEntities(x, y, z, inst.pick_up_range, PickUpMustTags, PickUpCanNotTags)
 
   local ba = owner:GetBufferedAction()
 
@@ -750,51 +568,6 @@ end
 
 local function AcceptTest(inst, item)
   return item and item.prefab ~= nil
-end
-
-local function GetPropertyWithLevel(level)
-  return {
-    pick_up_range = math.min(15, 2 + level * 0.3),
-    storm_chance = math.min(90, 10 + level * 1.33), -- 0~100
-    storm_range = 2 + math.min(12, level * 0.25),
-    storm_damage_ratio = math.min(2.0, 0.1 + level * 0.025), -- 0.0~1.0
-    spike_chance = math.min(90, 5 + level * 1.31), -- 0~100
-    spike_amount = math.floor(2 + math.floor(level * 0.375 + 0.5) + 0.1),
-    spike_damage = 10 + level * 1.25,
-    spike_latency = math.max(0.2, 2 - level * 0.0375),
-    spike_radius = math.min(4, 1 + level * 0.045),
-    summon_cd = math.max(8, 60 - math.floor(level * 0.85 + 0.5)),
-    summon_amount = math.min(5, 1 + math.floor(level * 0.06666667)),
-    summon_health_addition = level * 10,
-    summon_health_regen = math.floor(1 + level * 0.1 + 0.5),
-    summon_damage_addition = math.floor(level * 1.5),
-    summon_attack_period_mutl = math.max(0.5, 1 - level * 0.01),
-    summon_speed_addition = math.min(6, level * 0.1),
-    summon_extra_armor = math.min(0.4, level * 0.006667),
-    peridic_heal_cd = math.max(1, 15 - level * 0.4),
-    peridic_heal_amount = 1 + math.floor(level * 0.2),
-    heal_hunger_rate = math.max(1.05, 1.6 - level * 0.01),
-    shadow_healing_chance = math.min(50, 5 + level * 0.65), -- 0~100
-    shadow_healing_amount = math.min(10, 1 + level * 0.15),
-    shadow_healing_cost = math.max(5, 15 - level * 0.12),
-    health_steel_ratio = math.min(0.75, (0.5 + 0.1 * (level + 1)) * 0.016),
-    slowing_rate = math.min(0.990, 0.1 + (level + 5) * 0.01),
-    slowing_duration = math.min(6, 0.75 + level * 0.1),
-    exp_from_hit = 5 + level * 3,
-    boost_speed_amount = math.min(4, 0.5 + level * 0.175),
-    chop_power = math.min(20, 1 + level * 0.5),
-    mine_power = math.min(20, 1 + level * 0.5),
-    oar_power = math.min(0.98, 0.2 + level * 0.01),
-    oar_max_velocity = math.min(15, 2 + level * 0.02),
-    damage = 12 + level * 3,
-    range_base = 1.5 + math.min(10, level * 0.2),
-    range_escape = 2.5 + math.min(12, 0.5 * level),
-    walkspeedmult = math.min(2.55, math.floor(TUNING.CANE_SPEED_MULT * (100 + level * 1.75)) / 100),
-    dapperness = TUNING.DAPPERNESS_MED * math.min(3, 0.5 + level * 0.06),
-    light_radius = math.min(32, 2 + level * 1.5),
-    light_falloff = math.max(0.8, 1.2 - level * 0.01),
-    light_intensity = math.min(0.97, 0.92 + level * 0.00125)
-  }
 end
 
 local function OnGetItemFromPlayer(inst, giver, item)
