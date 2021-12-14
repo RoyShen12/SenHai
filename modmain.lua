@@ -173,6 +173,18 @@ AddPrefabPostInit(
   end
 )
 
+AddPrefabPostInit(
+  "chester",
+  function(inst)
+    if not inst:HasTag("spider") then
+      inst:AddTag("spiderdisguise")
+    end
+    if not inst:HasTag("hound") then
+      inst:AddTag("houndfriend")
+    end
+  end
+)
+
 -- GLOBAL.WeaponExpTable.senhai = 10
 
 GLOBAL.c_link = function(w1, w2)

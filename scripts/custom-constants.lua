@@ -62,6 +62,7 @@ local Constants = {
     wormlight = 3,
     wormlight_lesser = 3,
     honeycomb = 3,
+    honey = 3,
     stinger = 3,
     cutreeds = 3,
     coontail = 3,

@@ -673,6 +673,7 @@ end
 
 local function onEquip(inst, owner) --装备
   OnGetItemFromPlayer(inst)
+
   owner.AnimState:OverrideSymbol("swap_object", "swap_senhai", "swap_senhai")
   owner.AnimState:Show("ARM_carry")
   owner.AnimState:Hide("ARM_normal")
@@ -680,9 +681,7 @@ local function onEquip(inst, owner) --装备
   inst.task_pick = inst:DoPeriodicTask(PickUpCD, autoPickup, nil, owner)
   inst.task_heal = inst:DoPeriodicTask(inst.peridic_heal_cd, autoHealAndRefresh, nil, owner)
   inst.Summons = {}
-  if inst.summon_amount > 0 then
-    inst.task_spawning = inst:DoPeriodicTask(inst.summon_cd, spawnSummons, 0.1, owner)
-  end
+  inst.task_spawning = inst:DoPeriodicTask(inst.summon_cd, spawnSummons, 0.1, owner)
 end
 
 local function onUnequip(inst, owner) --解除装备
@@ -789,7 +788,7 @@ local function DisplayNameFx(inst)
               string.format("%.0f", props.summon_health_addition) ..
                 " 额外生命、" ..
                   string.format("%.0f", props.summon_damage_addition) ..
-                    "额外伤害和" .. string.format("%.0f", props.summon_extra_armor * 100) .. "% 伤害吸收)") or
+                    " 额外伤害和 " .. string.format("%.0f", props.summon_extra_armor * 100) .. "% 伤害吸收)") or
     ""
 
   return name_with_lv ..
@@ -848,6 +847,14 @@ local function fn()
         local ActiveScreen = TheFrontEnd:GetActiveScreen()
         local Name = ActiveScreen and ActiveScreen.name or ""
         if Name:find("HUD") == nil then
+          return
+        end
+
+        if inst.replica.inventoryitem == nil then
+          return
+        end
+
+        if inst.replica.equippable == nil then
           return
         end
 
