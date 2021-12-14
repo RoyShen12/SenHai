@@ -184,7 +184,13 @@ local PickPrefabs = {
   "grass",
   "reeds",
   "wormlight_plant",
-  "carrat_planted"
+  "marsh_bush",
+  "flower_cave",
+  "flower_cave_double",
+  "flower_cave_triple",
+  "stalker_bulb",
+  "stalker_bulb_double"
+  -- "carrat_planted"
 }
 local PickUpForbidPrefabs = require("custom-constants").PickUpForbidPrefabs
 local PickUpForbidPattern = require("custom-constants").PickUpForbidPattern
