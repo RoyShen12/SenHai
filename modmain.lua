@@ -185,6 +185,18 @@ AddPrefabPostInit(
   end
 )
 
+AddPrefabPostInit(
+  "hutch",
+  function(inst)
+    if not inst:HasTag("spider") then
+      inst:AddTag("spiderdisguise")
+    end
+    if not inst:HasTag("hound") then
+      inst:AddTag("houndfriend")
+    end
+  end
+)
+
 -- GLOBAL.WeaponExpTable.senhai = 10
 
 GLOBAL.c_link = function(w1, w2)
@@ -227,6 +239,32 @@ AddModRPCHandler(
       else
         player.components.talker:Say("恢复召唤功能")
         senhai_inst.SummonEnabled = true
+      end
+    end
+  end
+)
+
+AddModRPCHandler(
+  "senhai",
+  "SwitchHammerAndShovel",
+  function(player, senhai_inst)
+    if
+      senhai_inst.components.inventoryitem:GetGrandOwner() == player and
+        senhai_inst.components.equippable:IsEquipped()
+     then
+      if
+        senhai_inst.components.tool:CanDoAction(ACTIONS.HAMMER) or
+          senhai_inst.components.tool:CanDoAction(ACTIONS.DIG)
+       then
+        player.components.talker:Say("禁用铲子和锤子")
+        senhai_inst.components.tool.actions[ACTIONS.HAMMER] = nil
+        senhai_inst.components.tool.actions[ACTIONS.DIG] = nil
+        senhai_inst:RemoveTag(ACTIONS.HAMMER.id .. "_tool")
+        senhai_inst:RemoveTag(ACTIONS.DIG.id .. "_tool")
+      else
+        player.components.talker:Say("启用铲子和锤子")
+        senhai_inst.components.tool:SetAction(ACTIONS.HAMMER, 20)
+        senhai_inst.components.tool:SetAction(ACTIONS.DIG, 20)
       end
     end
   end

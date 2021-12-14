@@ -1,5 +1,36 @@
 local GetPropertyWithLevel = require("numerical").GetPropertyWithLevel
 
+local function isLocalKeyEventReady(inst)
+  if ThePlayer == nil then
+    return false
+  end
+
+  local ActiveScreen = TheFrontEnd:GetActiveScreen()
+  local Name = ActiveScreen and ActiveScreen.name or ""
+
+  if Name:find("HUD") == nil then
+    return false
+  end
+
+  if inst.replica.inventoryitem == nil then
+    return false
+  end
+
+  if inst.replica.equippable == nil then
+    return false
+  end
+
+  if not inst.replica.inventoryitem:IsGrandOwner(ThePlayer) then
+    return false
+  end
+
+  if not inst.replica.equippable:IsEquipped() then
+    return false
+  end
+
+  return true
+end
+
 local assets = {
   Asset("ANIM", "anim/senhai.zip"), --地上的动画
   Asset("ANIM", "anim/swap_senhai.zip"),
@@ -902,33 +933,22 @@ local function fn()
     TheInput:AddKeyDownHandler(
       KEY_T,
       function()
-        if ThePlayer == nil then
-          return
-        end
-
-        local ActiveScreen = TheFrontEnd:GetActiveScreen()
-        local Name = ActiveScreen and ActiveScreen.name or ""
-        if Name:find("HUD") == nil then
-          return
-        end
-
-        if inst.replica.inventoryitem == nil then
-          return
-        end
-
-        if inst.replica.equippable == nil then
-          return
-        end
-
-        if not inst.replica.inventoryitem:IsGrandOwner(ThePlayer) then
-          return
-        end
-
-        if not inst.replica.equippable:IsEquipped() then
+        if not isLocalKeyEventReady(inst) then
           return
         end
 
         SendModRPCToServer(MOD_RPC.senhai.SwitchSummon, inst)
+      end
+    )
+
+    TheInput:AddKeyDownHandler(
+      KEY_O,
+      function()
+        if not isLocalKeyEventReady(inst) then
+          return
+        end
+
+        SendModRPCToServer(MOD_RPC.senhai.SwitchHammerAndShovel, inst)
       end
     )
 
