@@ -45,7 +45,7 @@ local function spawnSummons(inst, owner)
           inArr = true
         end
       end
-      if not inArr then
+      if not inArr and old_summon.prefab ~= "pigman" and old_summon.prefab ~= "rocky" then
         old_summon:Remove()
       end
     end
@@ -176,6 +176,16 @@ local PickUpCanNotTags = {
   "weapon",
   "light"
 }
+local PickPrefabs = {
+  "sapling",
+  "berrybush",
+  "berrybush2",
+  "berrybush_juicy",
+  "grass",
+  "reeds",
+  "wormlight_plant",
+  "carrat_planted"
+}
 local PickUpForbidPrefabs = require("custom-constants").PickUpForbidPrefabs
 local PickUpForbidPattern = require("custom-constants").PickUpForbidPattern
 local PickUpCD = 0.1
@@ -221,6 +231,48 @@ local function autoPickup(inst, owner)
       owner.components.inventory:GiveItem(v, nil, v:GetPosition())
 
       return
+    end
+  end
+
+  -- 懒人采摘
+  if inst.pick_up_advance then
+    ents = TheSim:FindEntities(x, y, z, inst.pick_up_range, {}, PickUpCanNotTags)
+    ba = owner:GetBufferedAction()
+
+    for i, v in ipairs(ents) do
+      if
+        ---@diagnostic disable-next-line: undefined-field
+        table.contains(PickPrefabs, v.prefab) and v.components.pickable and
+          v.components.pickable:CanBePicked() and
+          (function()
+            local empty = 0
+
+            for j = 1, owner.components.inventory:GetNumSlots() do
+              if owner.components.inventory:GetItemInSlot(j) == nil then
+                empty = empty + 1
+              end
+            end
+
+            local bag = owner.components.inventory:GetEquippedItem(EQUIPSLOTS.BACK)
+
+            if bag and bag.components.container then
+              local backCtn = bag.components.container
+
+              for j = 1, backCtn:GetNumSlots() do
+                if backCtn:GetItemInSlot(j) == nil then
+                  empty = empty + 1
+                end
+              end
+            end
+
+            return empty >= 3
+          end)() and
+          (ba == nil or ba.action ~= ACTIONS.PICKUP or ba.target ~= v)
+       then
+        SpawnPrefab("sand_puff").Transform:SetPosition(v.Transform:GetWorldPosition())
+
+        v.components.pickable:Pick(owner)
+      end
     end
   end
 end
@@ -600,7 +652,11 @@ local function OnGetItemFromPlayer(inst, giver, item)
     end
   end
 
-  local properties = GetPropertyWithLevel(inst.level:value())
+  local level = inst.level:value()
+
+  local properties = GetPropertyWithLevel(level)
+
+  inst.pick_up_advance = level >= 20
 
   inst.pick_up_range = properties.pick_up_range
 
