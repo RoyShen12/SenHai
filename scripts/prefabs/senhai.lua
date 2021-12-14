@@ -531,7 +531,8 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
           v ~= target and v:IsValid() and not v:IsInLimbo() and v.components.combat and
             not (v.components.health ~= nil and v.components.health:IsDead()) and
             attacker.components.combat:IsValidTarget(v) and
-            (v:HasTag("monster") or v.components.combat.target == attacker) and
+            (v:HasTag("monster") or v.components.combat.target == attacker or
+              v.prefab == target.prefab) and
             not v:HasTag("wall") and
             string.find(v.prefab, "wall") == nil and
             string.find(v.prefab, "fence") == nil
