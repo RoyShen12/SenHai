@@ -229,7 +229,7 @@ AddModRPCHandler(
 
         for _, summon in ipairs(senhai_inst.Summons) do
           senhai_inst:DoTaskInTime(
-            math.random(),
+            math.random() * 0.5,
             function()
               summon:Remove()
             end

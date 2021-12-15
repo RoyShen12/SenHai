@@ -110,6 +110,20 @@ local function spawnSummons(inst, owner)
     if summon:HasTag("tallbird") then
       summon.Transform:SetScale(.33, .33, .33)
       summon.pending_spawn_smallbird = false
+      summon:SetBrain(require("brains/spiderbrain"))
+      summon.components.combat:SetAreaDamage(
+        2.5,
+        0.5,
+        function(target, attacker)
+          return target:IsValid() and not target:IsInLimbo() and target.components.combat and
+            target.components.health and
+            not target.components.health:IsDead() and
+            (target:HasTag("monster") or target.components.combat.target == attacker) and
+            not target:HasTag("wall") and
+            string.find(target.prefab, "wall") == nil and
+            string.find(target.prefab, "fence") == nil
+        end
+      )
       summon.components.combat:SetRetargetFunction(
         3,
         function(_inst)
@@ -623,7 +637,8 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
       for _, v in pairs(ents) do
         if
           v ~= target and v:IsValid() and not v:IsInLimbo() and v.components.combat and
-            not (v.components.health ~= nil and v.components.health:IsDead()) and
+            v.components.health and
+            not v.components.health:IsDead() and
             attacker.components.combat:IsValidTarget(v) and
             (v:HasTag("monster") or v.components.combat.target == attacker or
               v.prefab == target.prefab) and
@@ -898,7 +913,7 @@ local function onUnequip(inst, owner) --解除装备
     inst.task_spawning = nil
     for _, summon in ipairs(inst.Summons) do
       inst:DoTaskInTime(
-        math.random(),
+        math.random() * 0.5,
         function()
           summon:Remove()
         end

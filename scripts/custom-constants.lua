@@ -216,27 +216,63 @@ local Constants = {
     moonglass_charged = 140,
     moonstorm_spark = 150,
     moonstorm_glass = 160,
-    spiderhat = 180,
-    hivehat = 180,
-    royal_jelly = 200,
-    goose_feather = 200,
+    spiderhat = function()
+      return math.random(180, 180 * 1.5)
+    end,
+    hivehat = function()
+      return math.random(180, 180 * 1.5)
+    end,
+    royal_jelly = function()
+      return math.random(200, 200 * 1.5)
+    end,
+    goose_feather = function()
+      return math.random(200, 200 * 1.5)
+    end,
     ruins_bat = 200,
-    ruinshat = 200,
-    armorruins = 200,
-    bearger_fur = 500,
-    mandrake = 500,
-    cookedmandrake = 510,
-    mandrakesoup = 550,
-    butter = 600,
-    deerclops_eyeball = 1000,
+    ruinshat = function()
+      return math.random(200, 200 * 1.5)
+    end,
+    armorruins = function()
+      return math.random(200, 200 * 1.5)
+    end,
+    bearger_fur = function()
+      return math.random(500, 500 * 2)
+    end,
+    mandrake = function()
+      return math.random(500, 500 * 2.5)
+    end,
+    cookedmandrake = function()
+      return math.random(510, 510 * 2.5)
+    end,
+    mandrakesoup = function()
+      return math.random(550, 550 * 2.5)
+    end,
+    butter = function()
+      return math.random(600, 600 * 2.5)
+    end,
+    deerclops_eyeball = function()
+      return math.random(1000, 1000 * 2)
+    end,
     eyeturret_item = 1800,
     expbean = 2000,
-    dragon_scales = 2500,
-    shroom_skin = 3500,
-    malbatross_beak = 5000,
-    malbatross_feather = 5000,
-    minotaurhorn = 10000,
-    opalpreciousgem = 30000,
+    dragon_scales = function()
+      return math.random(2500, 2500 * 2)
+    end,
+    shroom_skin = function()
+      return math.random(3500, 3500 * 2)
+    end,
+    malbatross_beak = function()
+      return math.random(5000, 5000 * 2)
+    end,
+    malbatross_feather = function()
+      return math.random(5000, 5000 * 2)
+    end,
+    minotaurhorn = function()
+      return math.random(10000, 10000 * 2)
+    end,
+    opalpreciousgem = function()
+      return math.random(30000, 30000 * 2)
+    end,
     alterguardianhat = 150000
   },
   PickUpForbidPrefabs = {
