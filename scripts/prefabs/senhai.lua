@@ -76,7 +76,8 @@ local function spawnSummons(inst, owner)
           inArr = true
         end
       end
-      if not inArr and old_summon.prefab ~= "pigman" and old_summon.prefab ~= "rocky" then
+      ---@diagnostic disable-next-line: undefined-field
+      if not inArr and table.contains(table.getkeys(SummonsList), old_summon.prefab) then
         old_summon:Remove()
       end
     end
