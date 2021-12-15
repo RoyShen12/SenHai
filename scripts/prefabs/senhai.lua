@@ -112,8 +112,8 @@ local function spawnSummons(inst, owner)
       summon.pending_spawn_smallbird = false
       summon:SetBrain(require("brains/spiderbrain"))
       summon.components.combat:SetAreaDamage(
-        2.5,
-        0.5,
+        1.75,
+        0.333,
         function(target, attacker)
           return target:IsValid() and not target:IsInLimbo() and target.components.combat and
             target.components.health and
