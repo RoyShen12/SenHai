@@ -263,8 +263,8 @@ AddModRPCHandler(
         senhai_inst:RemoveTag(ACTIONS.DIG.id .. "_tool")
       else
         player.components.talker:Say("启用铲子和锤子")
-        senhai_inst.components.tool:SetAction(ACTIONS.HAMMER, 20)
-        senhai_inst.components.tool:SetAction(ACTIONS.DIG, 20)
+        senhai_inst.components.tool:SetAction(ACTIONS.HAMMER, senhai_inst.hammer_power)
+        senhai_inst.components.tool:SetAction(ACTIONS.DIG, senhai_inst.dig_power)
       end
     end
   end

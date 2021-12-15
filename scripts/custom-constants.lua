@@ -387,8 +387,8 @@ local Constants = {
     spider_warrior = 30,
     spider_healer = 10,
     hound = 100,
-    icehound = 20
-    -- tallbird = 10
+    icehound = 20,
+    tallbird = 10
     -- spiderqueen = 120
   },
   SummonsNicknameList = {
@@ -398,8 +398,8 @@ local Constants = {
     spider_warrior = "小战斗叽居",
     spider_healer = "小奶妈叽居",
     hound = "小汪汪",
-    icehound = "小冰汪汪"
-    -- tallbird = "小鸟"
+    icehound = "小汪汪冰",
+    tallbird = "长腿鸟"
   }
 }
 

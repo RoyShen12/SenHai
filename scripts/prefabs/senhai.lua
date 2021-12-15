@@ -95,10 +95,78 @@ local function spawnSummons(inst, owner)
 
     local summon = SpawnPrefab(prefab)
 
-    summon.Transform:SetScale(.6, .6, .6)
-
     summon:AddTag("senhai_summons")
 
+    -------------------- special logic for each species
+    if summon:HasTag("hound") then
+      summon.Transform:SetScale(.42, .42, .42)
+      summon:AddTag("pet_hound")
+    end
+
+    if summon:HasTag("spider") then
+      summon.Transform:SetScale(.6, .6, .6)
+    end
+
+    if summon:HasTag("tallbird") then
+      summon.Transform:SetScale(.33, .33, .33)
+      summon.pending_spawn_smallbird = false
+      summon.components.combat:SetRetargetFunction(
+        3,
+        function(_inst)
+          local function HasFriendlyLeader(__inst, target)
+            local leader = __inst.components.follower.leader
+
+            local target_leader =
+              (target.components.follower ~= nil) and target.components.follower.leader or nil
+
+            if leader ~= nil and target_leader ~= nil then
+              if target_leader.components.inventoryitem then
+                target_leader = target_leader.components.inventoryitem:GetGrandOwner()
+                if target_leader == nil then
+                  return true
+                end
+              end
+
+              local PVP_enabled = TheNet:GetPVPEnabled()
+
+              return leader == target or
+                (target_leader ~= nil and
+                  (target_leader == leader or (target_leader:HasTag("player") and not PVP_enabled))) or
+                (target.components.domesticatable and
+                  target.components.domesticatable:IsDomesticated() and
+                  not PVP_enabled) or
+                (target.components.saltlicker and target.components.saltlicker.salted and
+                  not PVP_enabled)
+            elseif target_leader ~= nil and target_leader.components.inventoryitem then
+              target_leader = target_leader.components.inventoryitem:GetGrandOwner()
+              return target_leader ~= nil and target_leader:HasTag("spiderwhisperer")
+            end
+
+            return false
+          end
+          local function IsValidTarget(guy)
+            return guy.components.health and not guy.components.health:IsDead() and
+              _inst.components.combat:CanTarget(guy) and
+              not guy:HasTag("senhai_summons") and
+              not (_inst.components.follower ~= nil and _inst.components.follower.leader == guy) and
+              not HasFriendlyLeader(_inst, guy) and
+              not (_inst.components.follower ~= nil and _inst.components.follower.leader ~= nil and
+                _inst.components.follower.leader:HasTag("player") and
+                guy:HasTag("player") and
+                not TheNet:GetPVPEnabled())
+          end
+
+          return FindEntity(
+            _inst,
+            SpringCombatMod(TUNING.TALLBIRD_TARGET_DIST),
+            IsValidTarget,
+            {"_combat", "_health"}
+          )
+        end
+      )
+    end
+
+    -------------------- add tags for no internal conflict
     if not summon:HasTag("spider") then
       summon:AddTag("spiderdisguise")
     end
@@ -106,6 +174,7 @@ local function spawnSummons(inst, owner)
       summon:AddTag("houndfriend")
     end
 
+    -------------------- remove bad tags
     if summon:HasTag("trader") then
       summon:RemoveTag("trader")
     end
@@ -118,18 +187,22 @@ local function spawnSummons(inst, owner)
 
     summon.Transform:SetPosition(x + 3 * (math.random() - 0.5), y, z + 3 * (math.random() - 0.5))
 
+    -------------------- fix leader
     if summon.components.follower == nil then
       summon:AddComponent("follower")
     end
     summon.components.follower:SetLeader(owner)
     summon.components.follower.maxfollowtime = nil
 
+    -------------------- burn & freeze huge resistance
     if summon.components.burnable then
       summon.components.burnable.burntime = nil
     end
     if summon.components.freezable then
-      summon.components.freezable:SetResistance(100)
+      summon.components.freezable:SetResistance(1000)
     end
+
+    -------------------- remove components
     if summon.components.halloweenmoonmutable ~= nil then
       summon:RemoveComponent("halloweenmoonmutable")
     end
@@ -139,19 +212,36 @@ local function spawnSummons(inst, owner)
     if summon.components.sanityaura ~= nil then
       summon:RemoveComponent("sanityaura")
     end
+    if summon.components.hauntable ~= nil then
+      summon:RemoveComponent("hauntable")
+    end
+    if summon.components.leader ~= nil then
+      summon:RemoveComponent("leader")
+    end
+    if summon.components.homeseeker ~= nil then
+      summon:RemoveComponent("homeseeker")
+    end
 
+    -------------------- clear loots
     if summon.components.lootdropper then
       summon.components.lootdropper:SetLoot({})
     end
 
+    -------------------- no eating meats
     if summon.components.eater then
       summon.components.eater:SetStrongStomach(false)
       summon.components.eater:SetCanEatRawMeat(false)
     end
 
+    -------------------- no sleep
     if summon.components.sleeper then
       summon.components.sleeper.watchlight = true
-      summon.components.sleeper:SetResistance(10)
+      summon.components.sleeper:SetResistance(1000)
+      summon.components.sleeper:SetSleepTest(
+        function()
+          return false
+        end
+      )
     end
 
     summon.components.locomotor.walkspeed =
@@ -164,6 +254,9 @@ local function spawnSummons(inst, owner)
     summon.components.combat:SetAttackPeriod(
       summon.components.combat.min_attack_period * inst.summon_attack_period_mutl
     )
+    summon.components.combat.attackrange =
+      summon.components.combat.attackrange + inst.summon_extra_range
+    summon.components.combat.hitrange = summon.components.combat.hitrange + inst.summon_extra_range
     summon.components.health:SetMaxHealth(
       summon.components.health.maxhealth + inst.summon_health_addition
     )
@@ -714,6 +807,8 @@ local function OnGetItemFromPlayer(inst, giver, item)
 
   inst.components.tool:SetAction(ACTIONS.CHOP, properties.chop_power)
   inst.components.tool:SetAction(ACTIONS.MINE, properties.mine_power)
+  inst.hammer_power = properties.hammer_power
+  inst.dig_power = properties.dig_power
 
   inst.components.oar.force = properties.oar_power
   inst.components.oar.max_velocity = properties.oar_max_velocity
@@ -739,6 +834,7 @@ local function OnGetItemFromPlayer(inst, giver, item)
   inst.summon_attack_period_mutl = properties.summon_attack_period_mutl
   inst.summon_speed_addition = properties.summon_speed_addition
   inst.summon_extra_armor = properties.summon_extra_armor
+  inst.summon_extra_range = properties.summon_extra_range
   inst.summon_health_regen = properties.summon_health_regen
 
   inst.shadow_healing_chance = properties.shadow_healing_chance
@@ -769,6 +865,8 @@ end
 local function onEquip(inst, owner) --装备
   OnGetItemFromPlayer(inst)
 
+  owner:AddTag("spiderwhisperer")
+
   owner.AnimState:OverrideSymbol("swap_object", "swap_senhai", "swap_senhai")
   owner.AnimState:Show("ARM_carry")
   owner.AnimState:Hide("ARM_normal")
@@ -780,6 +878,8 @@ local function onEquip(inst, owner) --装备
 end
 
 local function onUnequip(inst, owner) --解除装备
+  owner:RemoveTag("spiderwhisperer")
+
   owner.AnimState:Hide("ARM_carry")
   owner.AnimState:Show("ARM_normal")
 
