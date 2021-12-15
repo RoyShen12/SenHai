@@ -199,7 +199,7 @@ local function spawnSummons(inst, owner)
       summon:RemoveTag("hostile")
     end
 
-    summon.Transform:SetPosition(x + 3 * (math.random() - 0.5), y, z + 3 * (math.random() - 0.5))
+    summon.Transform:SetPosition(x + 1 * (math.random() - 0.5), y, z + 1 * (math.random() - 0.5))
 
     -------------------- fix leader
     if summon.components.follower == nil then
@@ -1044,30 +1044,30 @@ local function fn()
 
   inst.displaynamefn = DisplayNameFx
 
+  TheInput:AddKeyDownHandler(
+    KEY_T,
+    function()
+      if not isLocalKeyEventReady(inst) then
+        return
+      end
+
+      SendModRPCToServer(MOD_RPC.senhai.SwitchSummon, inst)
+    end
+  )
+
+  TheInput:AddKeyDownHandler(
+    KEY_O,
+    function()
+      if not isLocalKeyEventReady(inst) then
+        return
+      end
+
+      SendModRPCToServer(MOD_RPC.senhai.SwitchHammerAndShovel, inst)
+    end
+  )
+
   if not TheWorld.ismastersim then
     inst:ListenForEvent("leveldirty", OnLevelChange)
-
-    TheInput:AddKeyDownHandler(
-      KEY_T,
-      function()
-        if not isLocalKeyEventReady(inst) then
-          return
-        end
-
-        SendModRPCToServer(MOD_RPC.senhai.SwitchSummon, inst)
-      end
-    )
-
-    TheInput:AddKeyDownHandler(
-      KEY_O,
-      function()
-        if not isLocalKeyEventReady(inst) then
-          return
-        end
-
-        SendModRPCToServer(MOD_RPC.senhai.SwitchHammerAndShovel, inst)
-      end
-    )
 
     return inst
   end

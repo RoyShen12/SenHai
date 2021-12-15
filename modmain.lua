@@ -176,11 +176,13 @@ AddPrefabPostInit(
 AddPrefabPostInit(
   "chester",
   function(inst)
-    if not inst:HasTag("spider") then
-      inst:AddTag("spiderdisguise")
-    end
-    if not inst:HasTag("hound") then
-      inst:AddTag("houndfriend")
+    if TheWorld.ismastersim then
+      if not inst:HasTag("spider") then
+        inst:AddTag("spiderdisguise")
+      end
+      if not inst:HasTag("hound") then
+        inst:AddTag("houndfriend")
+      end
     end
   end
 )
@@ -188,11 +190,13 @@ AddPrefabPostInit(
 AddPrefabPostInit(
   "hutch",
   function(inst)
-    if not inst:HasTag("spider") then
-      inst:AddTag("spiderdisguise")
-    end
-    if not inst:HasTag("hound") then
-      inst:AddTag("houndfriend")
+    if TheWorld.ismastersim then
+      if not inst:HasTag("spider") then
+        inst:AddTag("spiderdisguise")
+      end
+      if not inst:HasTag("hound") then
+        inst:AddTag("houndfriend")
+      end
     end
   end
 )
