@@ -66,6 +66,15 @@ local function DoAttack(inst)
       if v:GetDistanceSqToPoint(x, y, z) < range * range and inst.components.combat:CanTarget(v) then
         -- attacker.components.combat:DoAttack(v)
         v.components.combat:GetAttacked(attacker, spike_damage, inst)
+        -- gain exp (1/4)
+        pcall(
+          function()
+            require("common-helper").gainExp(
+              attacker.components.combat:GetWeapon().exp_from_hit * 0.25,
+              target
+            )
+          end
+        )
       end
     end
   end

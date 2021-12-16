@@ -455,30 +455,6 @@ local function OnPutInInventory(inst)
   inst._light.Light:Enable(true)
 end
 
-local function slowDownTarget(player, target, slow_mult, duration)
-  if
-    player and target and player.components.combat:IsValidTarget(target) and
-      target.components.locomotor
-   then
-    if target:HasTag("epic") then
-      -- Boss has 1/3 effect
-      slow_mult = 1 - ((1 - slow_mult) * 0.33)
-    end
-
-    target.components.locomotor:SetExternalSpeedMultiplier(player, "senhai", slow_mult)
-    player:DoTaskInTime(
-      duration,
-      function()
-        pcall(
-          function()
-            target.components.locomotor:RemoveExternalSpeedMultiplier(player, "senhai")
-          end
-        )
-      end
-    )
-  end
-end
-
 local function BoostOn(player, amount)
   pcall(
     function()
@@ -579,11 +555,15 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
   if target.components.combat then
     -- E1 吸血
     attacker.components.health:DoDelta(calcHealthDrain(inst, attacker, target))
+
     -- E2 吸血鬼的拥抱
     if #AllPlayers > 1 and math.random(0, 100) > (100 - inst.shadow_healing_chance) then
+      local shadow_healing_casted_count = 0
+
       for _, other_player in ipairs(AllPlayers) do
         if
-          other_player ~= attacker and not other_player:HasTag("playerghost") and
+          other_player and other_player:IsValid() and other_player ~= attacker and
+            not other_player:HasTag("playerghost") and
             attacker.components.sanity.current > inst.shadow_healing_cost and
             attacker.components.hunger.current > inst.shadow_healing_cost and
             other_player.components.health and
@@ -594,8 +574,9 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
             (other_player.components.health:GetPercent() < 0.5 or
               other_player.components.health.currenthealth < 100) and
             not other_player.components.health:IsDead() and
-            attacker:GetDistanceSqToInst(other_player) < 900
+            attacker:GetDistanceSqToInst(other_player) < 1200
          then
+          shadow_healing_casted_count = shadow_healing_casted_count + 1
           ---@diagnostic disable-next-line: redundant-parameter
           attacker.components.talker:Say("吸血鬼的拥抱！")
 
@@ -610,9 +591,11 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
             attacker:DoPeriodicTask(
             0.1,
             function()
-              other_player.components.health:DoDelta(inst.shadow_healing_amount)
+              other_player.components.health:DoDelta(inst.shadow_healing_amount, true)
+              attacker.components.health:DoDelta(inst.shadow_healing_amount * 0.25, true)
             end
           )
+
           attacker:DoTaskInTime(
             1,
             function()
@@ -621,9 +604,35 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
           )
         end
       end
+
+      if shadow_healing_casted_count > 0 then
+        local DOT =
+          attacker:DoPeriodicTask(
+          0.1,
+          function()
+            target.components.health:DoDelta(
+              inst.shadow_healing_amount * shadow_healing_casted_count,
+              true
+            )
+          end
+        )
+        attacker:DoTaskInTime(
+          1,
+          function()
+            DOT:Cancel()
+          end
+        )
+      end
     end
+
     -- E3 减速
-    slowDownTarget(attacker, target, 1 - inst.slowing_rate, inst.slowing_duration)
+    require("common-helper").slowDownTarget(
+      attacker,
+      target,
+      1 - inst.slowing_rate,
+      inst.slowing_duration
+    )
+
     -- E4 风暴
     if inst.storm_chance > 0 and math.random(0, 100) > (100 - inst.storm_chance) then
       ---@diagnostic disable-next-line: redundant-parameter
@@ -649,9 +658,9 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
           stormHitCount = stormHitCount + 1
 
           SpawnPrefab("explode_reskin").Transform:SetPosition(v.Transform:GetWorldPosition())
-          -- SpawnPrefab("maxwell_smoke").Transform:SetPosition(v.Transform:GetWorldPosition())
+          -- SpawnPrefa("maxwell_smoke").Transform:SetPosition(v.Transform:GetWorldPosition())
+
           -- AOE damage
-          -- inst.components.weapon:LaunchProjectile(attacker, v)
           v.components.combat:GetAttacked(
             attacker,
             attacker.components.combat:CalcDamage(v, inst, inst.storm_damage_ratio),
@@ -662,12 +671,23 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
             calcHealthDrain(inst, attacker, v) * inst.storm_damage_ratio * 0.25
           )
           -- 群体减速
-          slowDownTarget(attacker, v, (1 - inst.slowing_rate) * 1.1, inst.slowing_duration)
+          require("common-helper").slowDownTarget(
+            attacker,
+            v,
+            (1 - inst.slowing_rate) * 1.1,
+            inst.slowing_duration
+          )
+          -- gain exp (1/4)
+          pcall(
+            function()
+              require("common-helper").gainExp(inst.exp_from_hit * 0.25, v)
+            end
+          )
 
-          if math.random(0, 100) > 80 then
-            attacker.components.hunger:DoDelta(1)
-            attacker.components.sanity:DoDelta(1)
-          end
+        -- if math.random(0, 100) > 80 then
+        --   attacker.components.hunger:DoDelta(1)
+        --   attacker.components.sanity:DoDelta(1)
+        -- end
         end
       end
 
@@ -682,23 +702,14 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
         BoostSpeed(attacker, inst.boost_speed_amount)
       end
     end
+
     -- E5 gain exp
     pcall(
       function()
-        if attacker.components.achievementmanager and attacker.components.achievementmanager.sumexp then
-          local old_say = attacker.components.talker.Say
-          attacker.components.talker.Say = function()
-          end
-
-          attacker.components.achievementmanager:sumexp(
-            attacker,
-            (target:HasTag("epic") and 3 or 1) * inst.exp_from_hit
-          )
-
-          attacker.components.talker.Say = old_say
-        end
+        require("common-helper").gainExp(inst.exp_from_hit, target)
       end
     )
+
     -- E6 地刺
     if inst.spike_chance > 0 and math.random(0, 100) > (100 - inst.spike_chance) then
       DoSpikeAttack(
