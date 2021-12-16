@@ -101,6 +101,7 @@ local function spawnSummons(inst, owner)
     if summon:HasTag("hound") then
       summon.Transform:SetScale(.42, .42, .42)
       summon:AddTag("pet_hound")
+      summon.components.combat:SetRetargetFunction(3, require("common-helper").summonRetargetFn)
     end
 
     if summon:HasTag("spider") then
@@ -118,66 +119,15 @@ local function spawnSummons(inst, owner)
           return target:IsValid() and not target:IsInLimbo() and target.components.combat and
             target.components.health and
             not target.components.health:IsDead() and
-            (target:HasTag("monster") or target.components.combat.target == attacker) and
+            (target:HasTag("monster") or target.components.combat.target == attacker or
+              target.components.combat.target == attacker.components.follower.leader or
+              target.prefab == attacker.components.combat.target) and
             not target:HasTag("wall") and
             string.find(target.prefab, "wall") == nil and
             string.find(target.prefab, "fence") == nil
         end
       )
-      summon.components.combat:SetRetargetFunction(
-        3,
-        function(_inst)
-          local function HasFriendlyLeader(__inst, target)
-            local leader = __inst.components.follower.leader
-
-            local target_leader =
-              (target.components.follower ~= nil) and target.components.follower.leader or nil
-
-            if leader ~= nil and target_leader ~= nil then
-              if target_leader.components.inventoryitem then
-                target_leader = target_leader.components.inventoryitem:GetGrandOwner()
-                if target_leader == nil then
-                  return true
-                end
-              end
-
-              local PVP_enabled = TheNet:GetPVPEnabled()
-
-              return leader == target or
-                (target_leader ~= nil and
-                  (target_leader == leader or (target_leader:HasTag("player") and not PVP_enabled))) or
-                (target.components.domesticatable and
-                  target.components.domesticatable:IsDomesticated() and
-                  not PVP_enabled) or
-                (target.components.saltlicker and target.components.saltlicker.salted and
-                  not PVP_enabled)
-            elseif target_leader ~= nil and target_leader.components.inventoryitem then
-              target_leader = target_leader.components.inventoryitem:GetGrandOwner()
-              return target_leader ~= nil and target_leader:HasTag("spiderwhisperer")
-            end
-
-            return false
-          end
-          local function IsValidTarget(guy)
-            return guy.components.health and not guy.components.health:IsDead() and
-              _inst.components.combat:CanTarget(guy) and
-              not guy:HasTag("senhai_summons") and
-              not (_inst.components.follower ~= nil and _inst.components.follower.leader == guy) and
-              not HasFriendlyLeader(_inst, guy) and
-              not (_inst.components.follower ~= nil and _inst.components.follower.leader ~= nil and
-                _inst.components.follower.leader:HasTag("player") and
-                guy:HasTag("player") and
-                not TheNet:GetPVPEnabled())
-          end
-
-          return FindEntity(
-            _inst,
-            SpringCombatMod(TUNING.TALLBIRD_TARGET_DIST),
-            IsValidTarget,
-            {"_combat", "_health"}
-          )
-        end
-      )
+      summon.components.combat:SetRetargetFunction(3, require("common-helper").summonRetargetFn)
     end
 
     -------------------- add tags for no internal conflict
@@ -318,6 +268,8 @@ local PickUpCanNotTags = {
 local PickPrefabs = {
   "sapling",
   "sapling_moon",
+  "cactus",
+  "oasis_cactus",
   "berrybush",
   "berrybush2",
   "berrybush_juicy",
@@ -329,8 +281,8 @@ local PickPrefabs = {
   "flower_cave_double",
   "flower_cave_triple",
   "stalker_bulb",
-  "stalker_bulb_double"
-  -- "carrat_planted"
+  "stalker_bulb_double",
+  "carrot_planted"
 }
 local PickUpForbidPrefabs = require("custom-constants").PickUpForbidPrefabs
 local PickUpForbidPattern = require("custom-constants").PickUpForbidPattern
@@ -548,8 +500,10 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
   if target.components.burnable ~= nil then
     if target.components.burnable:IsBurning() then
       target.components.burnable:Extinguish()
+      return
     elseif target.components.burnable:IsSmoldering() then
       target.components.burnable:SmotherSmolder()
+      return
     end
   end
 
