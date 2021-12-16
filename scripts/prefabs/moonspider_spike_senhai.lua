@@ -70,6 +70,7 @@ local function DoAttack(inst)
         pcall(
           function()
             require("common-helper").gainExp(
+              attacker,
               attacker.components.combat:GetWeapon().exp_from_hit * 0.25,
               target
             )

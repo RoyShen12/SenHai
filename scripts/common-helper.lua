@@ -1,18 +1,18 @@
 return {
-  gainExp = function(amount, target, epic_mult)
+  gainExp = function(player, amount, target, epic_mult)
     epic_mult = epic_mult or 3
 
-    if attacker.components.achievementmanager and attacker.components.achievementmanager.sumexp then
-      local old_say = attacker.components.talker.Say
-      attacker.components.talker.Say = function()
+    if player.components.achievementmanager and player.components.achievementmanager.sumexp then
+      local old_say = player.components.talker.Say
+      player.components.talker.Say = function()
       end
 
-      attacker.components.achievementmanager:sumexp(
-        attacker,
+      player.components.achievementmanager:sumexp(
+        player,
         ((target ~= nil and target:IsValid() and target:HasTag("epic")) and 3 or 1) * amount
       )
 
-      attacker.components.talker.Say = old_say
+      player.components.talker.Say = old_say
     end
   end,
   slowDownTarget = function(player, target, slow_mult, duration)

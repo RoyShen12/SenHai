@@ -317,6 +317,7 @@ local PickUpCanNotTags = {
 }
 local PickPrefabs = {
   "sapling",
+  "sapling_moon",
   "berrybush",
   "berrybush2",
   "berrybush_juicy",
@@ -680,7 +681,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
           -- gain exp (1/4)
           pcall(
             function()
-              require("common-helper").gainExp(inst.exp_from_hit * 0.25, v)
+              require("common-helper").gainExp(attacker, inst.exp_from_hit * 0.25, v)
             end
           )
 
@@ -706,7 +707,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
     -- E5 gain exp
     pcall(
       function()
-        require("common-helper").gainExp(inst.exp_from_hit, target)
+        require("common-helper").gainExp(attacker, inst.exp_from_hit, target)
       end
     )
 
