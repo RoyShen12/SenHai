@@ -386,26 +386,71 @@ local Constants = {
     "_blueprint",
     "archive_lockbox"
   },
+  PickUpCanNotTags = {
+    "FX",
+    "INLIMBO",
+    "NOCLICK",
+    "knockbackdelayinteraction",
+    "catchable",
+    "fire",
+    "minesprung",
+    "mineactive",
+    "spider",
+    "tool",
+    "weapon",
+    "light"
+  },
+  PickPrefabs = {
+    "sapling",
+    "sapling_moon",
+    "cactus",
+    "oasis_cactus",
+    "berrybush",
+    "berrybush2",
+    "berrybush_juicy",
+    "grass",
+    "reeds",
+    "wormlight_plant",
+    "marsh_bush",
+    "flower_cave",
+    "flower_cave_double",
+    "flower_cave_triple",
+    "stalker_bulb",
+    "stalker_bulb_double",
+    "carrot_planted",
+    "cave_banana_tree",
+    "cave_fern",
+    "mandrake_planted",
+    "red_mushroom",
+    "green_mushroom",
+    "blue_mushroom",
+    "weed_firenettle",
+    "weed_forgetmelots",
+    "weed_ivy",
+    "weed_tillweed"
+  },
   SummonsList = {
-    spider = 100,
-    spider_hider = 20,
-    spider_spitter = 50,
-    spider_warrior = 30,
-    spider_healer = 10,
-    hound = 100,
-    icehound = 20,
-    tallbird = 10
-    -- spiderqueen = 120
+    spider = 100.0,
+    spider_hider = 20.0,
+    spider_spitter = 50.0,
+    spider_warrior = 30.0,
+    spider_healer = 10.0,
+    spider_dropper = 35.0,
+    hound = 100.0,
+    icehound = 20.0,
+    tallbird = 10.0
+    -- spiderqueen = 120.0
   },
   SummonsNicknameList = {
     spider = "小叽居",
-    spider_hider = "小龟缩叽居",
-    spider_spitter = "小吐网叽居",
-    spider_warrior = "小战斗叽居",
-    spider_healer = "小奶妈叽居",
+    spider_hider = "龟缩叽居",
+    spider_spitter = "吐网叽居",
+    spider_warrior = "战斗叽居",
+    spider_healer = "奶妈叽居",
+    spider_dropper = "白脑壳叽居",
     hound = "小汪汪",
-    icehound = "小汪汪冰",
-    tallbird = "长腿鸟"
+    icehound = "汪汪冰",
+    tallbird = "长腿叽"
   }
 }
 
@@ -422,7 +467,7 @@ end
 
 for num = 1, NUM_TRINKETS do
   Constants.WeaponExpTable["trinket_" .. tostring(num)] = function()
-    return math.random(10, 100)
+    return (TUNING.GOLD_VALUES.TRINKETS[num] or 3) * math.random(10, 50)
   end
 end
 
@@ -447,14 +492,14 @@ setmetatable(
       end
 
       if string.match(k, "^oceanfish_small_%d_inv$") then
-        return math.random(60, 120)
-      end
-
-      if string.match(k, "^oceanfish_medium_%d_inv$") then
         return math.random(120, 240)
       end
 
-      return 0.1
+      if string.match(k, "^oceanfish_medium_%d_inv$") then
+        return math.random(240, 480)
+      end
+
+      return math.random(1, 5) / 10
     end
   }
 )

@@ -121,7 +121,15 @@
         "NUM_TRINKETS",
         "MakeInventoryFloatable",
         "net_ushortint",
-        "Ingredient"
+        "Ingredient",
+        "TALKINGFONT",
+        "KEY_T",
+        "SpringCombatMod",
+        "GetRandomWithVariance",
+        "shuffleArray",
+        "PI",
+        "AddModRPCHandler",
+        "KEY_END"
     ],
     "lua.targetVersion": "5.1",
     "search.exclude": {
@@ -131,6 +139,6 @@
         "**/.draft": true
     },
     "Lua.diagnostics.disable": [
-        "undefined-global"
+        // "undefined-global"
     ]
 }
