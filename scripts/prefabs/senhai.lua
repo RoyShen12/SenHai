@@ -187,6 +187,14 @@ local function SummonAnimalBuddy(inst, owner)
   end
 
   if summon.prefab == "icehound" then
+    local leader = summon.components.follower.leader
+    leader.components.sanity:SetMax(leader.components.sanity.max + 100)
+    summon:ListenForEvent(
+      "onremove",
+      function()
+        leader.components.sanity:SetMax(leader.components.sanity.max - 100)
+      end
+    )
   end
 
   -------------------- add tags for no internal conflict
