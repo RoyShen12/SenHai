@@ -3,7 +3,7 @@ description = [[
 Thanks for PM: 森域
 ]]
 author = "Roy Shen"
-version = "2.0.0-beta-fix-7"
+version = "2.0.0-beta-fix-8"
 forumthread = ""
 dst_compatible = true --兼容联机
 dont_starve_compatible = false --不兼容单机

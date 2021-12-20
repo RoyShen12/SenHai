@@ -55,6 +55,14 @@ local function SummonAnimalBuddy(inst, owner)
 
   summon:AddTag("senhai_summons")
 
+  -------------------- fix leader
+  if summon.components.follower == nil then
+    summon:AddComponent("follower")
+  end
+
+  summon.components.follower:SetLeader(owner)
+  summon.components.follower.maxfollowtime = nil
+
   -------------------- special logic for each tag
   if summon:HasTag("hound") then
     summon.Transform:SetScale(.32, .32, .32)
@@ -167,6 +175,20 @@ local function SummonAnimalBuddy(inst, owner)
     summon.DoHeal = MakeHealerSpiderDoHeal(inst)
   end
 
+  if summon.prefab == "hound" then
+    local leader = summon.components.follower.leader
+    leader.components.health:SetMaxHealth(leader.components.health.maxhealth + 100)
+    summon:ListenForEvent(
+      "onremove",
+      function()
+        leader.components.health:SetMaxHealth(leader.components.health.maxhealth - 100)
+      end
+    )
+  end
+
+  if summon.prefab == "icehound" then
+  end
+
   -------------------- add tags for no internal conflict
   if not summon:HasTag("spider") then
     summon:AddTag("spiderdisguise")
@@ -198,14 +220,6 @@ local function SummonAnimalBuddy(inst, owner)
     summon.components.talker.font = TALKINGFONT
     summon.components.talker.offset = Vector3(0, -320, 0)
   end
-
-  -------------------- fix leader
-  if summon.components.follower == nil then
-    summon:AddComponent("follower")
-  end
-
-  summon.components.follower:SetLeader(owner)
-  summon.components.follower.maxfollowtime = nil
 
   -------------------- burn & freeze huge resistance
   -- if summon.components.burnable then
