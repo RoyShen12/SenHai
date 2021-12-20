@@ -103,7 +103,7 @@ function containers.widgetsetup(container, prefab, data)
   end
 end
 
-GLOBAL.WeaponExpTable = require("custom-constants").WeaponExpTable
+GLOBAL.WeaponExpTable = require("senhai-constants").WeaponExpTable
 
 AddPrefabPostInit(
   "armorruins",
