@@ -384,7 +384,8 @@ local Constants = {
     "trunkvest_",
     "oceanfishingbobber_",
     "_blueprint",
-    "archive_lockbox"
+    "archive_lockbox",
+    "container"
   },
   PickUpCanNotTags = {
     "FX",
@@ -400,6 +401,7 @@ local Constants = {
     "weapon",
     "light"
   },
+  -- 自动采摘 白名单
   PickPrefabs = {
     "sapling",
     "sapling_moon",
@@ -421,9 +423,9 @@ local Constants = {
     "cave_banana_tree",
     "cave_fern",
     "mandrake_planted",
-    "red_mushroom",
-    "green_mushroom",
-    "blue_mushroom",
+    -- "red_mushroom",
+    -- "green_mushroom",
+    -- "blue_mushroom",
     "weed_firenettle",
     "weed_forgetmelots",
     "weed_ivy",
