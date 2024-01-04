@@ -45,15 +45,15 @@ STRINGS.RECIPE_DESC.SENHAI = "铸造一把猪猪刀" --配方上面的描述
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.SENHAI = "粗~粗~粗~" --人物检查的描述
 
 Recipe(
-    "senhai",
-    {
-      Ingredient("torch", 1),
-      Ingredient("spear", 1),
-      Ingredient("pigskin", 1)
-    },
-    RECIPETABS.WAR,
-    TECH.NONE
-  ).atlas = "images/inventoryimages/senhai.xml"
+  "senhai",
+  {
+    Ingredient("torch", 1),
+    Ingredient("spear", 1),
+    Ingredient("pigskin", 1)
+  },
+  RECIPETABS.WAR,
+  TECH.NONE
+).atlas = "images/inventoryimages/senhai.xml"
 
 local containers = require("containers")
 
@@ -86,7 +86,7 @@ params.krampus_sack = {
 -- remax
 for _, v in pairs(params) do
   containers.MAXITEMSLOTS =
-    math.max(containers.MAXITEMSLOTS, v.widget.slotpos ~= nil and #v.widget.slotpos or 0)
+      math.max(containers.MAXITEMSLOTS, v.widget.slotpos ~= nil and #v.widget.slotpos or 0)
 end
 
 local containers_widgetsetup_base = containers.widgetsetup
@@ -155,13 +155,13 @@ AddPrefabPostInit(
 
 GLOBAL.c_link = function(w1, w2)
   if
-    w1 and w2 and type(w1) == "table" and type(w2) == "table" and w1.prefab == "wormhole" and
+      w1 and w2 and type(w1) == "table" and type(w2) == "table" and w1.prefab == "wormhole" and
       w2.prefab == "wormhole" and
       w1.components.teleporter and
       w2.components.teleporter and
       w1.components.teleporter.targetTeleporter == nil and
       w2.components.teleporter.targetTeleporter == nil
-   then
+  then
     w1.components.teleporter.targetTeleporter = w2
     w2.components.teleporter.targetTeleporter = w1
   end
@@ -173,13 +173,13 @@ AddModRPCHandler(
   function(player, senhai_inst)
     -- print("recieve ModRPC senhai", ...)
     if
-      senhai_inst:IsValid() and player:IsValid() and player.components.health and
+        senhai_inst:IsValid() and player:IsValid() and player.components.health and
         not player.components.health:IsDead() and
         not player:HasTag("playerghost") and
         senhai_inst.components.inventoryitem:GetGrandOwner() == player and
         senhai_inst.components.equippable:IsEquipped() and
         senhai_inst.summon_amount > 0
-     then
+    then
       if senhai_inst.SummonEnabled then
         player.components.talker:Say("禁用召唤功能")
         senhai_inst.SummonEnabled = false
@@ -206,16 +206,16 @@ AddModRPCHandler(
   "SwitchHammerAndShovel",
   function(player, senhai_inst)
     if
-      senhai_inst:IsValid() and player:IsValid() and player.components.health and
+        senhai_inst:IsValid() and player:IsValid() and player.components.health and
         not player.components.health:IsDead() and
         not player:HasTag("playerghost") and
         senhai_inst.components.inventoryitem:GetGrandOwner() == player and
         senhai_inst.components.equippable:IsEquipped()
-     then
+    then
       if
-        senhai_inst.components.tool:CanDoAction(ACTIONS.HAMMER) or
+          senhai_inst.components.tool:CanDoAction(ACTIONS.HAMMER) or
           senhai_inst.components.tool:CanDoAction(ACTIONS.DIG)
-       then
+      then
         player.components.talker:Say("禁用铲子和锤子")
         senhai_inst.components.tool.actions[ACTIONS.HAMMER] = nil
         senhai_inst.components.tool.actions[ACTIONS.DIG] = nil
@@ -235,36 +235,36 @@ AddModRPCHandler(
   "TpToFriend",
   function(player, senhai_inst)
     if
-      not TheNet:GetPVPEnabled() and #AllPlayers > 1 and senhai_inst:IsValid() and player:IsValid() and
+        not TheNet:GetPVPEnabled() and #AllPlayers > 1 and senhai_inst:IsValid() and player:IsValid() and
         player.components.health and
         not player.components.health:IsDead() and
         not player:HasTag("playerghost") and
         senhai_inst.components.inventoryitem:GetGrandOwner() == player and
         senhai_inst.components.equippable:IsEquipped()
-     then
+    then
       local senhai_equipped_players = {}
 
       for _, other_player in ipairs(AllPlayers) do
         local in_hand =
-          other_player.components.inventory and
-          other_player.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS) or
-          nil
+            other_player.components.inventory and
+            other_player.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS) or
+            nil
         if
-          other_player:IsValid() and other_player.Transform and other_player.components.health and
+            other_player:IsValid() and other_player.Transform and other_player.components.health and
             not other_player.components.health:IsDead() and
             not other_player:HasTag("playerghost") and
             in_hand and
             in_hand:IsValid() and
             in_hand.prefab == "senhai"
-         then
+        then
           table.insert(senhai_equipped_players, other_player)
         end
       end
 
       if
-        #senhai_equipped_players > 0 and player.components.hunger.current > 30 and
+          #senhai_equipped_players > 0 and player.components.hunger.current > 30 and
           player.components.sanity.current > 30
-       then
+      then
         local target_player = senhai_equipped_players[math.random(#senhai_equipped_players)]
 
         player.components.talker:Say("传送到另一个森海持有者！")
