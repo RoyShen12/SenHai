@@ -1062,18 +1062,18 @@ local function DisplayNameFx(inst)
       string.format("%.1f", props.spike_radius) ..
       " 敌人造成 " .. string.format("%.0f", props.spike_damage) .. " 伤害"
 
-  local summon =
-      props.summon_amount > 0 and
-      ("\n召唤最多 " ..
-        props.summon_amount ..
-        " 个动物伙伴 (伙伴获得 " ..
-        string.format("%.0f", props.summon_health_addition) ..
-        " 额外生命、" ..
-        string.format("%.0f", props.summon_damage_addition) ..
-        " 额外伤害和 " ..
-        string.format("%.0f", props.summon_extra_armor * 100) ..
-        "% 伤害吸收)，复活CD " .. string.format("%.0f", props.summon_cd) .. " 秒") or
-      ""
+  -- local summon =
+  --     props.summon_amount > 0 and
+  --     ("\n召唤最多 " ..
+  --       props.summon_amount ..
+  --       " 个动物伙伴 (伙伴获得 " ..
+  --       string.format("%.0f", props.summon_health_addition) ..
+  --       " 额外生命、" ..
+  --       string.format("%.0f", props.summon_damage_addition) ..
+  --       " 额外伤害和 " ..
+  --       string.format("%.0f", props.summon_extra_armor * 100) ..
+  --       "% 伤害吸收)，复活CD " .. string.format("%.0f", props.summon_cd) .. " 秒") or
+  --     ""
 
   return name_with_lv ..
       slowing .. pick_range .. life_steel .. life_regen .. storm .. spike -- .. summon

@@ -54,7 +54,7 @@ description = [[
 项目地址: https://github.com/RoyShen12/SenHai
 ]]
 author = "Roy Shen"
-version = "2.0.7"
+version = "2.0.8"
 forumthread = ""
 dst_compatible = true              --兼容联机
 dont_starve_compatible = false     --不兼容单机
