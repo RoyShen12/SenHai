@@ -44,15 +44,17 @@ STRINGS.NAMES.SENHAI = "猪刀森海" --名字
 STRINGS.RECIPE_DESC.SENHAI = "铸造一把猪猪刀" --配方上面的描述
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.SENHAI = "粗~粗~粗~" --人物检查的描述
 
-Recipe(
+AddRecipe2(
   "senhai",
   {
     Ingredient("torch", 1),
     Ingredient("spear", 1),
     Ingredient("pigskin", 1)
   },
-  RECIPETABS.WAR,
-  TECH.NONE
+  -- RECIPETABS.WAR,
+  TECH.NONE,
+  nil,
+  { "WEAPONS" }
 ).atlas = "images/inventoryimages/senhai.xml"
 
 --#region 坎普斯背包魔改

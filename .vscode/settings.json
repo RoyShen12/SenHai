@@ -132,7 +132,8 @@
         "KEY_END",
         "Recipe",
         "RECIPETABS",
-        "TECH"
+        "TECH",
+        "AddRecipe2"
     ],
     "lua.targetVersion": "5.1",
     "search.exclude": {

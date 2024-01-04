@@ -1,7 +1,7 @@
 local GetPropertyWithLevel = require("numerical").GetPropertyWithLevel
-local SummonsList = require("senhai-constants").SummonsList
-local SummonsNicknameList = require("senhai-constants").SummonsNicknameList
-local summonRetargetFn = require("common-helper").summonRetargetFn
+-- local SummonsList = require("senhai-constants").SummonsList
+-- local SummonsNicknameList = require("senhai-constants").SummonsNicknameList
+-- local summonRetargetFn = require("common-helper").summonRetargetFn
 local MakeHealerSpiderDoHeal = require("common-helper").MakeHealerSpiderDoHeal
 local PickUpForbidPrefabs = require("senhai-constants").PickUpForbidPrefabs
 local PickUpForbidPattern = require("senhai-constants").PickUpForbidPattern
@@ -37,346 +37,346 @@ local function CreateLight()
   return temp
 end
 
-local function SummonAnimalBuddy(inst, owner)
-  local x, y, z = owner.Transform:GetWorldPosition()
+-- local function SummonAnimalBuddy(inst, owner)
+--   local x, y, z = owner.Transform:GetWorldPosition()
 
-  local prefab = nil
-  local random = math.random()
-  for key, value in pairs(SummonsList) do
-    if random < value then
-      prefab = key
-      break
-    end
-  end
+--   local prefab = nil
+--   local random = math.random()
+--   for key, value in pairs(SummonsList) do
+--     if random < value then
+--       prefab = key
+--       break
+--     end
+--   end
 
-  local summon = SpawnPrefab(prefab)
+--   local summon = SpawnPrefab(prefab)
 
-  --#region summon construct
+--   --#region summon construct
 
-  summon:AddTag("senhai_summons")
+--   summon:AddTag("senhai_summons")
 
-  -------------------- fix leader
-  if summon.components.follower == nil then
-    summon:AddComponent("follower")
-  end
+--   -------------------- fix leader
+--   if summon.components.follower == nil then
+--     summon:AddComponent("follower")
+--   end
 
-  summon.components.follower:SetLeader(owner)
-  summon.components.follower.maxfollowtime = nil
+--   summon.components.follower:SetLeader(owner)
+--   summon.components.follower.maxfollowtime = nil
 
-  -------------------- special logic for each tag
-  if summon:HasTag("hound") then
-    summon.Transform:SetScale(.32, .32, .32)
-    summon:AddTag("pet_hound")
-    summon.components.combat:SetRetargetFunction(3, summonRetargetFn)
-  end
+--   -------------------- special logic for each tag
+--   if summon:HasTag("hound") then
+--     summon.Transform:SetScale(.32, .32, .32)
+--     summon:AddTag("pet_hound")
+--     summon.components.combat:SetRetargetFunction(3, summonRetargetFn)
+--   end
 
-  if summon:HasTag("spider") then
-    summon.Transform:SetScale(.6, .6, .6)
-  end
+--   if summon:HasTag("spider") then
+--     summon.Transform:SetScale(.6, .6, .6)
+--   end
 
-  if summon:HasTag("tallbird") then
-    summon.Transform:SetScale(.33, .33, .33)
-    summon.pending_spawn_smallbird = false
-    summon:SetBrain(SpiderBrain)
-    summon.components.combat:SetAreaDamage(
-      1.75,
-      0.333,
-      function(target, attacker)
-        return target:IsValid() and not target:IsInLimbo() and target.components.combat and
-            target.components.health and
-            not target.components.health:IsDead() and
-            (target:HasTag("monster") or target.components.combat.target == attacker or
-              target.components.combat.target == attacker.components.follower.leader or
-              target.prefab == attacker.components.combat.target) and
-            not target:HasTag("wall") and
-            string.find(target.prefab, "wall") == nil and
-            string.find(target.prefab, "fence") == nil
-      end
-    )
-    summon.components.combat:SetRetargetFunction(3, summonRetargetFn)
-  end
+--   if summon:HasTag("tallbird") then
+--     summon.Transform:SetScale(.33, .33, .33)
+--     summon.pending_spawn_smallbird = false
+--     summon:SetBrain(SpiderBrain)
+--     summon.components.combat:SetAreaDamage(
+--       1.75,
+--       0.333,
+--       function(target, attacker)
+--         return target:IsValid() and not target:IsInLimbo() and target.components.combat and
+--             target.components.health and
+--             not target.components.health:IsDead() and
+--             (target:HasTag("monster") or target.components.combat.target == attacker or
+--               target.components.combat.target == attacker.components.follower.leader or
+--               target.prefab == attacker.components.combat.target) and
+--             not target:HasTag("wall") and
+--             string.find(target.prefab, "wall") == nil and
+--             string.find(target.prefab, "fence") == nil
+--       end
+--     )
+--     summon.components.combat:SetRetargetFunction(3, summonRetargetFn)
+--   end
 
-  -------------------- special logic for each prefab
-  if summon.prefab == "spider" then
-    if summon.components.burnable then
-      summon.components.burnable.burntime = nil
-      summon.components.burnable.Ignite = function()
-      end
-    end
+--   -------------------- special logic for each prefab
+--   if summon.prefab == "spider" then
+--     if summon.components.burnable then
+--       summon.components.burnable.burntime = nil
+--       summon.components.burnable.Ignite = function()
+--       end
+--     end
 
-    if summon.components.freezable then
-      summon.components.freezable:SetResistance(1000)
-      summon.components.freezable.Freeze = function()
-      end
-      summon.components.freezable.AddColdness = function()
-      end
-    end
-  end
+--     if summon.components.freezable then
+--       summon.components.freezable:SetResistance(1000)
+--       summon.components.freezable.Freeze = function()
+--       end
+--       summon.components.freezable.AddColdness = function()
+--       end
+--     end
+--   end
 
-  if summon.prefab == "spider_dropper" then
-    local old_onhitotherfn = summon.components.combat.onhitotherfn
-    summon.components.combat.onhitotherfn = function(
-      attacker,
-      target,
-      damage,
-      stimuli,
-      weapon,
-      damageresolved)
-      if old_onhitotherfn ~= nil then
-        old_onhitotherfn(attacker, target, damage, stimuli, weapon, damageresolved)
-      end
+--   if summon.prefab == "spider_dropper" then
+--     local old_onhitotherfn = summon.components.combat.onhitotherfn
+--     summon.components.combat.onhitotherfn = function(
+--       attacker,
+--       target,
+--       damage,
+--       stimuli,
+--       weapon,
+--       damageresolved)
+--       if old_onhitotherfn ~= nil then
+--         old_onhitotherfn(attacker, target, damage, stimuli, weapon, damageresolved)
+--       end
 
-      if
-          target ~= nil and target:IsValid() and target.components.health and target.components.combat and
-          summon.components.combat:IsValidTarget(target) and
-          inst.summon_spider_dropper_poison_chance > 0 and
-          math.random(0, 100) > (100 - inst.summon_spider_dropper_poison_chance)
-      then
-        summon.components.talker:Say("剧毒之牙！")
+--       if
+--           target ~= nil and target:IsValid() and target.components.health and target.components.combat and
+--           summon.components.combat:IsValidTarget(target) and
+--           inst.summon_spider_dropper_poison_chance > 0 and
+--           math.random(0, 100) > (100 - inst.summon_spider_dropper_poison_chance)
+--       then
+--         summon.components.talker:Say("剧毒之牙！")
 
-        local DOT =
-            summon:DoPeriodicTask(
-              0.1,
-              function()
-                pcall(
-                  function()
-                    target.components.health:DoDelta(-inst.summon_spider_dropper_poison_damage, true)
-                  end
-                )
-              end
-            )
-        summon:DoTaskInTime(
-          1,
-          function()
-            DOT:Cancel()
-          end
-        )
-      end
-    end
-  end
+--         local DOT =
+--             summon:DoPeriodicTask(
+--               0.1,
+--               function()
+--                 pcall(
+--                   function()
+--                     target.components.health:DoDelta(-inst.summon_spider_dropper_poison_damage, true)
+--                   end
+--                 )
+--               end
+--             )
+--         summon:DoTaskInTime(
+--           1,
+--           function()
+--             DOT:Cancel()
+--           end
+--         )
+--       end
+--     end
+--   end
 
-  if summon.prefab == "spider_hider" then
-    summon.components.health.externalabsorbmodifiers:SetModifier(
-      owner,
-      0.25,
-      "senhai_spider_hider_extra"
-    )
-  end
+--   if summon.prefab == "spider_hider" then
+--     summon.components.health.externalabsorbmodifiers:SetModifier(
+--       owner,
+--       0.25,
+--       "senhai_spider_hider_extra"
+--     )
+--   end
 
-  if summon.prefab == "spider_spitter" then
-    summon.components.combat.externaldamagemultipliers:SetModifier(
-      owner,
-      1.18,
-      "senhai_spider_spitter_extra"
-    )
-  end
+--   if summon.prefab == "spider_spitter" then
+--     summon.components.combat.externaldamagemultipliers:SetModifier(
+--       owner,
+--       1.18,
+--       "senhai_spider_spitter_extra"
+--     )
+--   end
 
-  if summon.prefab == "spider_healer" then
-    summon.DoHeal = MakeHealerSpiderDoHeal(inst)
-  end
+--   if summon.prefab == "spider_healer" then
+--     summon.DoHeal = MakeHealerSpiderDoHeal(inst)
+--   end
 
-  if summon.prefab == "hound" then
-    local leader = summon.components.follower.leader
-    leader.components.health:SetMaxHealth(leader.components.health.maxhealth + 100)
-    summon:ListenForEvent(
-      "onremove",
-      function()
-        leader.components.health:SetMaxHealth(leader.components.health.maxhealth - 100)
-      end
-    )
-  end
+--   if summon.prefab == "hound" then
+--     local leader = summon.components.follower.leader
+--     leader.components.health:SetMaxHealth(leader.components.health.maxhealth + 100)
+--     summon:ListenForEvent(
+--       "onremove",
+--       function()
+--         leader.components.health:SetMaxHealth(leader.components.health.maxhealth - 100)
+--       end
+--     )
+--   end
 
-  if summon.prefab == "icehound" then
-    local leader = summon.components.follower.leader
-    leader.components.sanity:SetMax(leader.components.sanity.max + 100)
-    summon:ListenForEvent(
-      "onremove",
-      function()
-        leader.components.sanity:SetMax(leader.components.sanity.max - 100)
-      end
-    )
-  end
+--   if summon.prefab == "icehound" then
+--     local leader = summon.components.follower.leader
+--     leader.components.sanity:SetMax(leader.components.sanity.max + 100)
+--     summon:ListenForEvent(
+--       "onremove",
+--       function()
+--         leader.components.sanity:SetMax(leader.components.sanity.max - 100)
+--       end
+--     )
+--   end
 
-  -------------------- add tags for no internal conflict
-  if not summon:HasTag("spider") then
-    summon:AddTag("spiderdisguise")
-  end
+--   -------------------- add tags for no internal conflict
+--   if not summon:HasTag("spider") then
+--     summon:AddTag("spiderdisguise")
+--   end
 
-  if not summon:HasTag("hound") then
-    summon:AddTag("houndfriend")
-  end
+--   if not summon:HasTag("hound") then
+--     summon:AddTag("houndfriend")
+--   end
 
-  -------------------- remove bad tags
-  if summon:HasTag("trader") then
-    summon:RemoveTag("trader")
-  end
+--   -------------------- remove bad tags
+--   if summon:HasTag("trader") then
+--     summon:RemoveTag("trader")
+--   end
 
-  if summon:HasTag("monster") then
-    summon:RemoveTag("monster")
-  end
+--   if summon:HasTag("monster") then
+--     summon:RemoveTag("monster")
+--   end
 
-  if summon:HasTag("hostile") then
-    summon:RemoveTag("hostile")
-  end
+--   if summon:HasTag("hostile") then
+--     summon:RemoveTag("hostile")
+--   end
 
-  summon.Transform:SetPosition(x + 1 * (math.random() - 0.5), y, z + 1 * (math.random() - 0.5))
+--   summon.Transform:SetPosition(x + 1 * (math.random() - 0.5), y, z + 1 * (math.random() - 0.5))
 
-  -------------------- add talker
-  if summon.components.talker == nil then
-    summon:AddComponent("talker")
-    summon.components.talker.fontsize = 28
-    summon.components.talker.font = TALKINGFONT
-    summon.components.talker.offset = Vector3(0, -320, 0)
-  end
+--   -------------------- add talker
+--   if summon.components.talker == nil then
+--     summon:AddComponent("talker")
+--     summon.components.talker.fontsize = 28
+--     summon.components.talker.font = TALKINGFONT
+--     summon.components.talker.offset = Vector3(0, -320, 0)
+--   end
 
-  -------------------- burn & freeze huge resistance
-  -- if summon.components.burnable then
-  --   summon.components.burnable.burntime = nil
-  -- end
+--   -------------------- burn & freeze huge resistance
+--   -- if summon.components.burnable then
+--   --   summon.components.burnable.burntime = nil
+--   -- end
 
-  -- if summon.components.freezable then
-  --   summon.components.freezable:SetResistance(1000)
-  -- end
+--   -- if summon.components.freezable then
+--   --   summon.components.freezable:SetResistance(1000)
+--   -- end
 
-  -------------------- remove components
-  if summon.components.halloweenmoonmutable ~= nil then
-    summon:RemoveComponent("halloweenmoonmutable")
-  end
+--   -------------------- remove components
+--   if summon.components.halloweenmoonmutable ~= nil then
+--     summon:RemoveComponent("halloweenmoonmutable")
+--   end
 
-  if summon.components.trader ~= nil then
-    summon:RemoveComponent("trader")
-  end
+--   if summon.components.trader ~= nil then
+--     summon:RemoveComponent("trader")
+--   end
 
-  if summon.components.sanityaura ~= nil then
-    summon:RemoveComponent("sanityaura")
-  end
+--   if summon.components.sanityaura ~= nil then
+--     summon:RemoveComponent("sanityaura")
+--   end
 
-  if summon.components.hauntable ~= nil then
-    summon:RemoveComponent("hauntable")
-  end
+--   if summon.components.hauntable ~= nil then
+--     summon:RemoveComponent("hauntable")
+--   end
 
-  if summon.components.leader ~= nil then
-    summon:RemoveComponent("leader")
-  end
+--   if summon.components.leader ~= nil then
+--     summon:RemoveComponent("leader")
+--   end
 
-  if summon.components.homeseeker ~= nil then
-    summon:RemoveComponent("homeseeker")
-  end
+--   if summon.components.homeseeker ~= nil then
+--     summon:RemoveComponent("homeseeker")
+--   end
 
-  -------------------- clear loots
-  if summon.components.lootdropper then
-    summon.components.lootdropper:SetLoot({})
-  end
+--   -------------------- clear loots
+--   if summon.components.lootdropper then
+--     summon.components.lootdropper:SetLoot({})
+--   end
 
-  -------------------- no eating meats
-  if summon.components.eater then
-    summon.components.eater:SetStrongStomach(false)
-    summon.components.eater:SetCanEatRawMeat(false)
-  end
+--   -------------------- no eating meats
+--   if summon.components.eater then
+--     summon.components.eater:SetStrongStomach(false)
+--     summon.components.eater:SetCanEatRawMeat(false)
+--   end
 
-  -------------------- no sleep
-  if summon.components.sleeper then
-    summon.components.sleeper.watchlight = true
-    summon.components.sleeper:SetResistance(1000)
-    summon.components.sleeper:SetSleepTest(
-      function()
-        return false
-      end
-    )
-  end
+--   -------------------- no sleep
+--   if summon.components.sleeper then
+--     summon.components.sleeper.watchlight = true
+--     summon.components.sleeper:SetResistance(1000)
+--     summon.components.sleeper:SetSleepTest(
+--       function()
+--         return false
+--       end
+--     )
+--   end
 
-  summon.components.locomotor.walkspeed =
-      summon.components.locomotor.walkspeed + inst.summon_speed_addition +
-      (summon.prefab == "spider" and 4 or 0)
-  summon.components.locomotor.runspeed =
-      summon.components.locomotor.runspeed + inst.summon_speed_addition +
-      (summon.prefab == "spider" and 4 or 0)
+--   summon.components.locomotor.walkspeed =
+--       summon.components.locomotor.walkspeed + inst.summon_speed_addition +
+--       (summon.prefab == "spider" and 4 or 0)
+--   summon.components.locomotor.runspeed =
+--       summon.components.locomotor.runspeed + inst.summon_speed_addition +
+--       (summon.prefab == "spider" and 4 or 0)
 
-  summon.components.combat:SetDefaultDamage(
-    summon.components.combat.defaultdamage + inst.summon_damage_addition
-  )
-  summon.components.combat:SetAttackPeriod(
-    summon.components.combat.min_attack_period * inst.summon_attack_period_mutl
-  )
-  summon.components.combat.attackrange =
-      summon.components.combat.attackrange + inst.summon_extra_range
+--   summon.components.combat:SetDefaultDamage(
+--     summon.components.combat.defaultdamage + inst.summon_damage_addition
+--   )
+--   summon.components.combat:SetAttackPeriod(
+--     summon.components.combat.min_attack_period * inst.summon_attack_period_mutl
+--   )
+--   summon.components.combat.attackrange =
+--       summon.components.combat.attackrange + inst.summon_extra_range
 
-  summon.components.combat.hitrange = summon.components.combat.hitrange + inst.summon_extra_range
+--   summon.components.combat.hitrange = summon.components.combat.hitrange + inst.summon_extra_range
 
-  summon.components.health:SetMaxHealth(
-    summon.components.health.maxhealth + inst.summon_health_addition +
-    (summon.prefab == "spider_warrior" and 500 or 0)
-  )
-  summon.components.health.externalabsorbmodifiers:SetModifier(
-    owner,
-    inst.summon_extra_armor,
-    "senhai_summon_base"
-  )
+--   summon.components.health:SetMaxHealth(
+--     summon.components.health.maxhealth + inst.summon_health_addition +
+--     (summon.prefab == "spider_warrior" and 500 or 0)
+--   )
+--   summon.components.health.externalabsorbmodifiers:SetModifier(
+--     owner,
+--     inst.summon_extra_armor,
+--     "senhai_summon_base"
+--   )
 
-  summon.components.health:StartRegen(
-    inst.summon_health_regen * (summon.prefab == "spider_warrior" and 2 or 1),
-    5,
-    false
-  )
+--   summon.components.health:StartRegen(
+--     inst.summon_health_regen * (summon.prefab == "spider_warrior" and 2 or 1),
+--     5,
+--     false
+--   )
 
-  if summon.components.named == nil then
-    summon:AddComponent("named")
-  end
-  summon.components.named:SetName(
-    (SummonsNicknameList[summon.prefab] or "") ..
-    "·" .. STRINGS.PIGNAMES[math.random(#STRINGS.PIGNAMES)] .. "  Lv: " .. inst.level:value()
-  )
+--   if summon.components.named == nil then
+--     summon:AddComponent("named")
+--   end
+--   summon.components.named:SetName(
+--     (SummonsNicknameList[summon.prefab] or "") ..
+--     "·" .. STRINGS.PIGNAMES[math.random(#STRINGS.PIGNAMES)] .. "  Lv: " .. inst.level:value()
+--   )
 
-  --#endregion
+--   --#endregion
 
-  summon:ListenForEvent(
-    "death",
-    function()
-      for index, ele in ipairs(inst.Summons) do
-        if ele == summon then
-          inst:DoTaskInTime(
-            inst.summon_cd,
-            function()
-              SummonAnimalBuddy(inst, owner)
-            end
-          )
-          return table.remove(inst.Summons, index)
-        end
-      end
-    end
-  )
+--   summon:ListenForEvent(
+--     "death",
+--     function()
+--       for index, ele in ipairs(inst.Summons) do
+--         if ele == summon then
+--           inst:DoTaskInTime(
+--             inst.summon_cd,
+--             function()
+--               SummonAnimalBuddy(inst, owner)
+--             end
+--           )
+--           return table.remove(inst.Summons, index)
+--         end
+--       end
+--     end
+--   )
 
-  table.insert(inst.Summons, summon)
-end
+--   table.insert(inst.Summons, summon)
+-- end
 
-local function clearOldSummons(leader)
-  print("clearOldSummons", leader)
-  for old_summon, is_follower in pairs(leader.components.leader.followers) do
-    print("followers loop old_summon", old_summon)
-    if old_summon:IsValid() and old_summon.components.follower.leader == leader then
-      -- local inArr = false
-      -- for _, summon in ipairs(inst.Summons) do
-      --   if summon == old_summon then
-      --     inArr = true
-      --   end
-      -- end
-      -- ---@diagnostic disable-next-line: undefined-field
-      -- if not inArr and table.contains(table.getkeys(SummonsList), old_summon.prefab) then
-      --   old_summon:Remove()
-      -- end
-      print("followers loop remove summon", old_summon)
-      old_summon:Remove()
-    end
-  end
-end
+-- local function clearOldSummons(leader)
+--   print("clearOldSummons", leader)
+--   for old_summon, is_follower in pairs(leader.components.leader.followers) do
+--     print("followers loop old_summon", old_summon)
+--     if old_summon:IsValid() and old_summon.components.follower.leader == leader then
+--       -- local inArr = false
+--       -- for _, summon in ipairs(inst.Summons) do
+--       --   if summon == old_summon then
+--       --     inArr = true
+--       --   end
+--       -- end
+--       -- ---@diagnostic disable-next-line: undefined-field
+--       -- if not inArr and table.contains(table.getkeys(SummonsList), old_summon.prefab) then
+--       --   old_summon:Remove()
+--       -- end
+--       print("followers loop remove summon", old_summon)
+--       old_summon:Remove()
+--     end
+--   end
+-- end
 
-local function spawnSummons(inst, owner)
-  clearOldSummons(owner)
+-- local function spawnSummons(inst, owner)
+--   clearOldSummons(owner)
 
-  while inst.SummonEnabled and #inst.Summons < inst.summon_amount do
-    SummonAnimalBuddy(inst, owner)
-  end
-end
+--   while inst.SummonEnabled and #inst.Summons < inst.summon_amount do
+--     SummonAnimalBuddy(inst, owner)
+--   end
+-- end
 
 local PickUpMustTags = { "_inventoryitem" }
 local PickUpCD = 0.1
@@ -868,17 +868,17 @@ local function OnGetItemFromPlayer(inst, giver, item)
   inst.spike_latency = properties.spike_latency
   inst.spike_radius = properties.spike_radius
 
-  inst.summon_cd = properties.summon_cd
-  inst.summon_amount = properties.summon_amount
-  inst.summon_health_addition = properties.summon_health_addition
-  inst.summon_damage_addition = properties.summon_damage_addition
-  inst.summon_attack_period_mutl = properties.summon_attack_period_mutl
-  inst.summon_speed_addition = properties.summon_speed_addition
-  inst.summon_extra_armor = properties.summon_extra_armor
-  inst.summon_extra_range = properties.summon_extra_range
-  inst.summon_health_regen = properties.summon_health_regen
-  inst.summon_spider_dropper_poison_chance = properties.summon_spider_dropper_poison_chance
-  inst.summon_spider_dropper_poison_damage = properties.summon_spider_dropper_poison_damage
+  -- inst.summon_cd = properties.summon_cd
+  -- inst.summon_amount = properties.summon_amount
+  -- inst.summon_health_addition = properties.summon_health_addition
+  -- inst.summon_damage_addition = properties.summon_damage_addition
+  -- inst.summon_attack_period_mutl = properties.summon_attack_period_mutl
+  -- inst.summon_speed_addition = properties.summon_speed_addition
+  -- inst.summon_extra_armor = properties.summon_extra_armor
+  -- inst.summon_extra_range = properties.summon_extra_range
+  -- inst.summon_health_regen = properties.summon_health_regen
+  -- inst.summon_spider_dropper_poison_chance = properties.summon_spider_dropper_poison_chance
+  -- inst.summon_spider_dropper_poison_damage = properties.summon_spider_dropper_poison_damage
 
   inst.shadow_healing_chance = properties.shadow_healing_chance
   inst.shadow_healing_amount = properties.shadow_healing_amount
@@ -918,13 +918,13 @@ local function onEquip(inst, owner) --装备
   inst.task_pick = inst:DoPeriodicTask(PickUpCD, autoPickup, nil, owner)
   inst.task_heal = inst:DoPeriodicTask(inst.peridic_heal_cd, autoHealAndRefresh, nil, owner)
 
-  inst.Summons = {}
-  inst:DoTaskInTime(
-    1,
-    function()
-      spawnSummons(inst, owner)
-    end
-  )
+  -- inst.Summons = {}
+  -- inst:DoTaskInTime(
+  --   1,
+  --   function()
+  --     spawnSummons(inst, owner)
+  --   end
+  -- )
 end
 
 local function onUnequip(inst, owner) --解除装备
@@ -957,15 +957,15 @@ local function onUnequip(inst, owner) --解除装备
   --   end
   --   inst.Summons = {}
   -- end
-  for _, summon in ipairs(inst.Summons) do
-    inst:DoTaskInTime(
-      math.random() * 0.5,
-      function()
-        summon:Remove()
-      end
-    )
-  end
-  inst.Summons = {}
+  -- for _, summon in ipairs(inst.Summons) do
+  --   inst:DoTaskInTime(
+  --     math.random() * 0.5,
+  --     function()
+  --       summon:Remove()
+  --     end
+  --   )
+  -- end
+  -- inst.Summons = {}
 end
 
 local function onsave(inst, data)
@@ -1053,7 +1053,7 @@ local function DisplayNameFx(inst)
       ""
 
   return name_with_lv ..
-      slowing .. pick_range .. life_steel .. life_regen .. storm .. spike .. summon
+      slowing .. pick_range .. life_steel .. life_regen .. storm .. spike -- .. summon
 end
 
 local function fn()
@@ -1106,16 +1106,16 @@ local function fn()
     end
   )
 
-  TheInput:AddKeyDownHandler(
-    KEY_T,
-    function()
-      if not isLocalKeyEventReady(inst) then
-        return
-      end
+  -- TheInput:AddKeyDownHandler(
+  --   KEY_T,
+  --   function()
+  --     if not isLocalKeyEventReady(inst) then
+  --       return
+  --     end
 
-      SendModRPCToServer(MOD_RPC.senhai.SwitchSummon, inst)
-    end
-  )
+  --     SendModRPCToServer(MOD_RPC.senhai.SwitchSummon, inst)
+  --   end
+  -- )
 
   TheInput:AddKeyDownHandler(
     KEY_O,
@@ -1134,8 +1134,8 @@ local function fn()
     return inst
   end
 
-  inst.Summons = {}
-  inst.SummonEnabled = true
+  -- inst.Summons = {}
+  -- inst.SummonEnabled = true
 
   -- inst:AddComponent("tradable")
   inst:AddComponent("inspectable")
