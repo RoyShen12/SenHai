@@ -58,53 +58,54 @@ AddRecipe2(
 ).atlas = "images/inventoryimages/senhai.xml"
 
 --#region 坎普斯背包魔改
--- local containers = require("containers")
+if GetModConfigData("enableKrampusSack") then
+  local containers = require("containers")
 
--- local params = {}
+  local params = {}
 
--- local widget = {
---   slotpos = {},
---   -- animbank = "ui_krampusbag_2x12",
---   -- animbuild = "ui_krampusbag_2x12",
---   pos = Vector3(-5, -120, 0)
--- }
+  local widget = {
+    slotpos = {},
+    -- animbank = "ui_krampusbag_2x12",
+    -- animbuild = "ui_krampusbag_2x12",
+    pos = Vector3(-5, -120, 0)
+  }
 
--- local height_base = 240
--- local pos_base = -162
--- local unit_size = 75
+  local height_base = 240
+  local pos_base = -162
+  local unit_size = 75
 
--- for y = -2, 7 do
---   table.insert(widget.slotpos, Vector3(pos_base - unit_size, -unit_size * y + height_base, 0))
---   table.insert(widget.slotpos, Vector3(pos_base + 0, -unit_size * y + height_base, 0))
---   table.insert(widget.slotpos, Vector3(pos_base + unit_size, -unit_size * y + height_base, 0))
--- end
+  for y = -2, 7 do
+    table.insert(widget.slotpos, Vector3(pos_base - unit_size, -unit_size * y + height_base, 0))
+    table.insert(widget.slotpos, Vector3(pos_base + 0, -unit_size * y + height_base, 0))
+    table.insert(widget.slotpos, Vector3(pos_base + unit_size, -unit_size * y + height_base, 0))
+  end
 
--- params.krampus_sack = {
---   widget = widget,
---   issidewidget = true,
---   type = "pack",
---   openlimit = 1
--- }
+  params.krampus_sack = {
+    widget = widget,
+    issidewidget = true,
+    type = "pack",
+    openlimit = 1
+  }
 
--- for _, v in pairs(params) do
---   containers.MAXITEMSLOTS =
---       math.max(containers.MAXITEMSLOTS, v.widget.slotpos ~= nil and #v.widget.slotpos or 0)
--- end
+  for _, v in pairs(params) do
+    containers.MAXITEMSLOTS =
+        math.max(containers.MAXITEMSLOTS, v.widget.slotpos ~= nil and #v.widget.slotpos or 0)
+  end
 
--- local containers_widgetsetup_base = containers.widgetsetup
+  local containers_widgetsetup_base = containers.widgetsetup
 
--- function containers.widgetsetup(container, prefab, data)
---   local t = params[prefab or container.inst.prefab]
---   if t ~= nil then
---     for k, v in pairs(t) do
---       container[k] = v
---     end
---     container:SetNumSlots(container.widget.slotpos ~= nil and #container.widget.slotpos or 0)
---   else
---     containers_widgetsetup_base(container, prefab, data)
---   end
--- end
-
+  function containers.widgetsetup(container, prefab, data)
+    local t = params[prefab or container.inst.prefab]
+    if t ~= nil then
+      for k, v in pairs(t) do
+        container[k] = v
+      end
+      container:SetNumSlots(container.widget.slotpos ~= nil and #container.widget.slotpos or 0)
+    else
+      containers_widgetsetup_base(container, prefab, data)
+    end
+  end
+end
 --#endregion
 
 GLOBAL.WeaponExpTable = require("senhai-constants").WeaponExpTable

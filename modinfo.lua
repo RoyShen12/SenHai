@@ -18,6 +18,7 @@ description = [[
 - 按End键传送到另一个携带本物品的玩家身边
 未改进的点：武器强化等级提高后，周期性回复能力的提高需要取下并重新装备一下武器才能生效
 注：Mod 还做了这些改动
+- 坎普斯背包变大
 - 提高了天气棒、懒人魔杖、唤星杖的耐久
 - 提高了老奶奶的精神上限
 - 提升了大理石甲、铥甲、铥头盔的强度
@@ -54,7 +55,7 @@ description = [[
 项目地址: https://github.com/RoyShen12/SenHai
 ]]
 author = "Roy Shen"
-version = "2.0.5"
+version = "2.0.6"
 forumthread = ""
 dst_compatible = true              --兼容联机
 dont_starve_compatible = false     --不兼容单机
@@ -70,4 +71,24 @@ icon_atlas = "modicon.xml"
 icon = "modicon.tex"
 server_filter_tags = {}
 
-configuration_options = {}
+local yes = "✓"
+local no = "×"
+
+configuration_options = {
+  {
+    name = "enableKrampusSack",
+    label = "坎普斯背包变大",
+    options = {
+      { description = yes, data = true },
+      { description = no,  data = false },
+    },
+    default = true,
+  },
+  -- { name = "Title", label = "", options = { { description = "", data = "" } }, default = "" },
+  -- {
+  --   name = "Title",
+  --   label = "拾取",
+  --   options = { { description = "", data = "" } },
+  --   default = "",
+  -- }
+}

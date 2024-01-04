@@ -133,7 +133,8 @@
         "Recipe",
         "RECIPETABS",
         "TECH",
-        "AddRecipe2"
+        "AddRecipe2",
+        "SenHaiNumerical"
     ],
     "lua.targetVersion": "5.1",
     "search.exclude": {
@@ -149,6 +150,7 @@
         "ARMORMARBLE",
         "ARMORRUINS",
         "inventoryimages",
+        "krampus",
         "lunarplant",
         "moonspider",
         "NOTDAY",
