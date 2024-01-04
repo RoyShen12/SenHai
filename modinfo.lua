@@ -16,7 +16,6 @@ description = [[
 - 时刻发光，光照范围随武器强化等级提高，放置在身上或丢下仍可发光
 - 按O键开启/关闭锤子和铲子功能
 - 按End键传送到另一个携带本物品的玩家身边
-未改进的点：武器强化等级提高后，周期性回复能力的提高需要取下并重新装备一下武器才能生效
 注：Mod 还做了这些改动
 - 坎普斯背包变大
 - 提高了天气棒、懒人魔杖、唤星杖的耐久
@@ -55,7 +54,7 @@ description = [[
 项目地址: https://github.com/RoyShen12/SenHai
 ]]
 author = "Roy Shen"
-version = "2.0.6"
+version = "2.0.7"
 forumthread = ""
 dst_compatible = true              --兼容联机
 dont_starve_compatible = false     --不兼容单机
@@ -90,5 +89,22 @@ configuration_options = {
   --   label = "拾取",
   --   options = { { description = "", data = "" } },
   --   default = "",
-  -- }
+  -- },
+  {
+    name = "mode",
+    label = "数值难度",
+    options = {
+      { description = "无敌 数值+99%", data = 0.99 },
+      { description = "无敌 数值+75%", data = 0.75 },
+      { description = "简单 数值+50%", data = 0.5 },
+      { description = "比较简单 数值+20%", data = 0.2 },
+      { description = "有点简单 数值+10%", data = 0.1 },
+      { description = "标准", data = 0 },
+      { description = "微困难 数值-10%", data = -0.1 },
+      { description = "有点困难 数值-20%", data = -0.2 },
+      { description = "比较困难 数值-35%", data = -0.35 },
+      { description = "困难 数值-40%", data = -0.4 },
+    },
+    default = 0,
+  },
 }

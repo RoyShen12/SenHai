@@ -1,4 +1,3 @@
-local GetPropertyWithLevel = require("numerical").GetPropertyWithLevel
 -- local SummonsList = require("senhai-constants").SummonsList
 -- local SummonsNicknameList = require("senhai-constants").SummonsNicknameList
 -- local summonRetargetFn = require("common-helper").summonRetargetFn
@@ -788,8 +787,61 @@ local function AcceptTest(inst, item)
   return item and item.prefab ~= nil
 end
 
+local function runPeriodTasks(inst, owner)
+  inst.task_pick = inst:DoPeriodicTask(PickUpCD, autoPickup, nil, owner)
+  inst.task_heal = inst:DoPeriodicTask(inst.peridic_heal_cd, autoHealAndRefresh, nil, owner)
+
+  -- inst.Summons = {}
+  -- inst:DoTaskInTime(
+  --   1,
+  --   function()
+  --     spawnSummons(inst, owner)
+  --   end
+  -- )
+end
+
+local function killPeriodTasks(inst)
+  if inst.task_pick ~= nil then
+    inst.task_pick:Cancel()
+    inst.task_pick = nil
+  end
+
+  if inst.task_heal ~= nil then
+    inst.task_heal:Cancel()
+    inst.task_heal = nil
+  end
+
+  -- if inst.task_spawning ~= nil then
+  --   inst.task_spawning:Cancel()
+  --   inst.task_spawning = nil
+  --   for _, summon in ipairs(inst.Summons) do
+  --     inst:DoTaskInTime(
+  --       math.random() * 0.5,
+  --       function()
+  --         summon:Remove()
+  --       end
+  --     )
+  --   end
+  --   inst.Summons = {}
+  -- end
+  -- for _, summon in ipairs(inst.Summons) do
+  --   inst:DoTaskInTime(
+  --     math.random() * 0.5,
+  --     function()
+  --       summon:Remove()
+  --     end
+  --   )
+  -- end
+  -- inst.Summons = {}
+end
+
+-- 吃掉物品升级
+-- 会根据等级重新计算属性
 local function OnGetItemFromPlayer(inst, giver, item)
+  local has_level_up = false
   if item and item.prefab ~= nil then
+    local old_level = inst.level:value()
+
     local exp_get = WeaponExpTable[item.prefab]
     if type(exp_get) == "function" then
       exp_get = exp_get()
@@ -823,11 +875,15 @@ local function OnGetItemFromPlayer(inst, giver, item)
 
       ReportLevel(inst, giver, "  +" .. exp_get)
     end
+
+    if inst.level:value() > old_level then
+      has_level_up = true
+    end
   end
 
   local level = inst.level:value()
 
-  local properties = GetPropertyWithLevel(level)
+  local properties = SenHaiNumerical(level)
 
   inst.pick_up_advance = level >= 20
 
@@ -894,6 +950,14 @@ local function OnGetItemFromPlayer(inst, giver, item)
     properties.light_radius
   )
 
+  if has_level_up and inst.components.inventoryitem then
+    local owner = inst.components.inventoryitem:GetGrandOwner()
+    if owner then
+      killPeriodTasks(inst)
+      runPeriodTasks(inst, owner)
+    end
+  end
+
   if giver ~= nil and item ~= nil then
     local OtherItems = giver.components.inventory:GetActiveItem()
     if
@@ -914,17 +978,7 @@ local function onEquip(inst, owner) --装备
   owner.AnimState:OverrideSymbol("swap_object", "swap_senhai", "swap_senhai")
   owner.AnimState:Show("ARM_carry")
   owner.AnimState:Hide("ARM_normal")
-
-  inst.task_pick = inst:DoPeriodicTask(PickUpCD, autoPickup, nil, owner)
-  inst.task_heal = inst:DoPeriodicTask(inst.peridic_heal_cd, autoHealAndRefresh, nil, owner)
-
-  -- inst.Summons = {}
-  -- inst:DoTaskInTime(
-  --   1,
-  --   function()
-  --     spawnSummons(inst, owner)
-  --   end
-  -- )
+  runPeriodTasks(inst, owner)
 end
 
 local function onUnequip(inst, owner) --解除装备
@@ -934,38 +988,7 @@ local function onUnequip(inst, owner) --解除装备
   owner.AnimState:Hide("ARM_carry")
   owner.AnimState:Show("ARM_normal")
 
-  if inst.task_pick ~= nil then
-    inst.task_pick:Cancel()
-    inst.task_pick = nil
-  end
-
-  if inst.task_heal ~= nil then
-    inst.task_heal:Cancel()
-    inst.task_heal = nil
-  end
-
-  -- if inst.task_spawning ~= nil then
-  --   inst.task_spawning:Cancel()
-  --   inst.task_spawning = nil
-  --   for _, summon in ipairs(inst.Summons) do
-  --     inst:DoTaskInTime(
-  --       math.random() * 0.5,
-  --       function()
-  --         summon:Remove()
-  --       end
-  --     )
-  --   end
-  --   inst.Summons = {}
-  -- end
-  -- for _, summon in ipairs(inst.Summons) do
-  --   inst:DoTaskInTime(
-  --     math.random() * 0.5,
-  --     function()
-  --       summon:Remove()
-  --     end
-  --   )
-  -- end
-  -- inst.Summons = {}
+  killPeriodTasks(inst)
 end
 
 local function onsave(inst, data)
@@ -986,9 +1009,9 @@ local function onpreload(inst, data)
   end
 end
 
-local function OnLevelChange(inst)
+local function OnLocalLevelChange(inst)
   -- run on local
-  local properties = GetPropertyWithLevel(inst.level:value())
+  local properties = SenHaiNumerical(inst.level:value())
   ResetLight(
     inst._light,
     properties.light_intensity,
@@ -999,7 +1022,7 @@ end
 
 local function DisplayNameFx(inst)
   local lv = inst.level:value()
-  local props = GetPropertyWithLevel(lv)
+  local props = SenHaiNumerical(lv)
 
   local name_with_lv = inst.name .. "  Lv: " .. lv
 
@@ -1129,7 +1152,7 @@ local function fn()
   )
 
   if not TheWorld.ismastersim then
-    inst:ListenForEvent("leveldirty", OnLevelChange)
+    inst:ListenForEvent("leveldirty", OnLocalLevelChange)
 
     return inst
   end

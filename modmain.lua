@@ -109,6 +109,11 @@ end
 --#endregion
 
 GLOBAL.WeaponExpTable = require("senhai-constants").WeaponExpTable
+local numerical = require("numerical")
+local mode_modifier = GetModConfigData("mode")
+GLOBAL.SenHaiNumerical = function(level)
+  return numerical.GetPropertyWithLevel(level, mode_modifier)
+end
 
 AddPrefabPostInit(
   "armorruins",
