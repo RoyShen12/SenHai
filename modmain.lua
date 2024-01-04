@@ -258,6 +258,7 @@ AddModRPCHandler(
             other_player:IsValid() and other_player.Transform and other_player.components.health and
             not other_player.components.health:IsDead() and
             not other_player:HasTag("playerghost") and
+            other_player ~= player and
             in_hand and
             in_hand:IsValid() and
             in_hand.prefab == "senhai"
@@ -267,17 +268,20 @@ AddModRPCHandler(
       end
 
       if
-          #senhai_equipped_players > 0 and player.components.hunger.current > 30 and
-          player.components.sanity.current > 30
+          #senhai_equipped_players > 0
       then
-        local target_player = senhai_equipped_players[math.random(#senhai_equipped_players)]
+        if player.components.hunger.current > 30 and player.components.sanity.current > 30 then
+          local target_player = senhai_equipped_players[math.random(#senhai_equipped_players)]
 
-        player.components.talker:Say("传送到另一个森海持有者！")
+          player.components.talker:Say("传送到另一个森海持有者！")
 
-        player.components.sanity:DoDelta(-30)
-        player.components.hunger:DoDelta(-30)
+          player.components.sanity:DoDelta(-30)
+          player.components.hunger:DoDelta(-30)
 
-        player.Transform:SetPosition(target_player.Transform:GetWorldPosition())
+          player.Transform:SetPosition(target_player.Transform:GetWorldPosition())
+        else
+          player.components.talker:Say("需要至少30点饥饿值和理智值！")
+        end
       end
     end
   end
