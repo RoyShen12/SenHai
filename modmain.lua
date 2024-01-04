@@ -21,14 +21,14 @@ TUNING.ORANGESTAFF_USES = 120
 TUNING.YELLOWSTAFF_USES = 120
 -- 老奶奶
 TUNING.WICKERBOTTOM_SANITY = 1000
-
+-- 大理石护甲
 TUNING.ARMORMARBLE = 150 * 7 * 0.7 * 15
 TUNING.ARMORMARBLE_SLOW = 1.05
-
+-- 毁灭帽
 TUNING.ARMOR_RUINSHAT = 150 * 8 * 0.7 * 15
-
+-- 毁灭甲
 TUNING.ARMORRUINS = 150 * 12 * 0.7 * 15
-
+-- 海星陷阱
 TUNING.STARFISH_TRAP_DAMAGE = 420
 -- TUNING.STARFISH_TRAP_RADIUS = 1.4
 -- TUNING.STARFISH_TRAP_TIMING = {
@@ -55,6 +55,7 @@ Recipe(
   TECH.NONE
 ).atlas = "images/inventoryimages/senhai.xml"
 
+--#region 坎普斯背包魔改
 local containers = require("containers")
 
 local params = {}
@@ -102,6 +103,8 @@ function containers.widgetsetup(container, prefab, data)
     containers_widgetsetup_base(container, prefab, data)
   end
 end
+
+--#endregion
 
 GLOBAL.WeaponExpTable = require("senhai-constants").WeaponExpTable
 

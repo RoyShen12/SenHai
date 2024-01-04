@@ -15,7 +15,7 @@ local ResetLight = require("common-helper").ResetLight
 local DoSpikeAttack = require("common-helper").DoSpikeAttack
 
 local assets = {
-  Asset("ANIM", "anim/senhai.zip"), --地上的动画
+  Asset("ANIM", "anim/senhai.zip"),                   --地上的动画
   Asset("ANIM", "anim/swap_senhai.zip"),
   Asset("ATLAS", "images/inventoryimages/senhai.xml") --加载物品栏贴图
 }
@@ -83,14 +83,14 @@ local function SummonAnimalBuddy(inst, owner)
       0.333,
       function(target, attacker)
         return target:IsValid() and not target:IsInLimbo() and target.components.combat and
-          target.components.health and
-          not target.components.health:IsDead() and
-          (target:HasTag("monster") or target.components.combat.target == attacker or
-            target.components.combat.target == attacker.components.follower.leader or
-            target.prefab == attacker.components.combat.target) and
-          not target:HasTag("wall") and
-          string.find(target.prefab, "wall") == nil and
-          string.find(target.prefab, "fence") == nil
+            target.components.health and
+            not target.components.health:IsDead() and
+            (target:HasTag("monster") or target.components.combat.target == attacker or
+              target.components.combat.target == attacker.components.follower.leader or
+              target.prefab == attacker.components.combat.target) and
+            not target:HasTag("wall") and
+            string.find(target.prefab, "wall") == nil and
+            string.find(target.prefab, "fence") == nil
       end
     )
     summon.components.combat:SetRetargetFunction(3, summonRetargetFn)
@@ -127,24 +127,24 @@ local function SummonAnimalBuddy(inst, owner)
       end
 
       if
-        target ~= nil and target:IsValid() and target.components.health and target.components.combat and
+          target ~= nil and target:IsValid() and target.components.health and target.components.combat and
           summon.components.combat:IsValidTarget(target) and
           inst.summon_spider_dropper_poison_chance > 0 and
           math.random(0, 100) > (100 - inst.summon_spider_dropper_poison_chance)
-       then
+      then
         summon.components.talker:Say("剧毒之牙！")
 
         local DOT =
-          summon:DoPeriodicTask(
-          0.1,
-          function()
-            pcall(
+            summon:DoPeriodicTask(
+              0.1,
               function()
-                target.components.health:DoDelta(-inst.summon_spider_dropper_poison_damage, true)
+                pcall(
+                  function()
+                    target.components.health:DoDelta(-inst.summon_spider_dropper_poison_damage, true)
+                  end
+                )
               end
             )
-          end
-        )
         summon:DoTaskInTime(
           1,
           function()
@@ -286,11 +286,11 @@ local function SummonAnimalBuddy(inst, owner)
   end
 
   summon.components.locomotor.walkspeed =
-    summon.components.locomotor.walkspeed + inst.summon_speed_addition +
-    (summon.prefab == "spider" and 4 or 0)
+      summon.components.locomotor.walkspeed + inst.summon_speed_addition +
+      (summon.prefab == "spider" and 4 or 0)
   summon.components.locomotor.runspeed =
-    summon.components.locomotor.runspeed + inst.summon_speed_addition +
-    (summon.prefab == "spider" and 4 or 0)
+      summon.components.locomotor.runspeed + inst.summon_speed_addition +
+      (summon.prefab == "spider" and 4 or 0)
 
   summon.components.combat:SetDefaultDamage(
     summon.components.combat.defaultdamage + inst.summon_damage_addition
@@ -299,13 +299,13 @@ local function SummonAnimalBuddy(inst, owner)
     summon.components.combat.min_attack_period * inst.summon_attack_period_mutl
   )
   summon.components.combat.attackrange =
-    summon.components.combat.attackrange + inst.summon_extra_range
+      summon.components.combat.attackrange + inst.summon_extra_range
 
   summon.components.combat.hitrange = summon.components.combat.hitrange + inst.summon_extra_range
 
   summon.components.health:SetMaxHealth(
     summon.components.health.maxhealth + inst.summon_health_addition +
-      (summon.prefab == "spider_warrior" and 500 or 0)
+    (summon.prefab == "spider_warrior" and 500 or 0)
   )
   summon.components.health.externalabsorbmodifiers:SetModifier(
     owner,
@@ -324,7 +324,7 @@ local function SummonAnimalBuddy(inst, owner)
   end
   summon.components.named:SetName(
     (SummonsNicknameList[summon.prefab] or "") ..
-      "·" .. STRINGS.PIGNAMES[math.random(#STRINGS.PIGNAMES)] .. "  Lv: " .. inst.level:value()
+    "·" .. STRINGS.PIGNAMES[math.random(#STRINGS.PIGNAMES)] .. "  Lv: " .. inst.level:value()
   )
 
   --#endregion
@@ -378,7 +378,7 @@ local function spawnSummons(inst, owner)
   end
 end
 
-local PickUpMustTags = {"_inventoryitem"}
+local PickUpMustTags = { "_inventoryitem" }
 local PickUpCD = 0.1
 
 local function autoPickup(inst, owner)
@@ -393,7 +393,7 @@ local function autoPickup(inst, owner)
 
   for i, v in ipairs(ents) do
     if
-      v.components.inventoryitem ~= nil and v.components.inventoryitem.canbepickedup and
+        v.components.inventoryitem ~= nil and v.components.inventoryitem.canbepickedup and
         v.prefab ~= nil and
         not PickUpForbidPrefabs[v.prefab] and
         (function()
@@ -407,13 +407,13 @@ local function autoPickup(inst, owner)
         v.components.inventoryitem.cangoincontainer and
         not v.components.inventoryitem:IsHeld() and
         owner.components.inventory:CanAcceptCount(v) >=
-          (v.components.stackable ~= nil and v.components.stackable.stacksize or 1) and
+        (v.components.stackable ~= nil and v.components.stackable.stacksize or 1) and
         (ba == nil or ba.action ~= ACTIONS.PICKUP or ba.target ~= v)
-     then
+    then
       if owner.components.minigame_participator ~= nil then
         local minigame = owner.components.minigame_participator:GetMinigame()
         if minigame ~= nil then
-          minigame:PushEvent("pickupcheat", {cheater = owner, item = v})
+          minigame:PushEvent("pickupcheat", { cheater = owner, item = v })
         end
       end
 
@@ -432,8 +432,8 @@ local function autoPickup(inst, owner)
 
     for i, v in ipairs(ents) do
       if
-        ---@diagnostic disable-next-line: undefined-field
-        table.contains(PickPrefabs, v.prefab) and v.components.pickable and
+      ---@diagnostic disable-next-line: undefined-field
+          table.contains(PickPrefabs, v.prefab) and v.components.pickable and
           v.components.pickable:CanBePicked() and
           (function()
             local empty = 0
@@ -459,7 +459,7 @@ local function autoPickup(inst, owner)
             return empty >= 3
           end)() and
           (ba == nil or ba.action ~= ACTIONS.PICKUP or ba.target ~= v)
-       then
+      then
         SpawnPrefab("sand_puff").Transform:SetPosition(v.Transform:GetWorldPosition())
 
         v.components.pickable:Pick(owner)
@@ -470,12 +470,12 @@ end
 
 local function autoHealAndRefresh(inst, owner)
   if
-    (owner.components.health and owner.components.health:IsHurt() and not owner.components.oldager) and
+      (owner.components.health and owner.components.health:IsHurt() and not owner.components.oldager) and
       (owner.components.health:GetMaxWithPenalty() - owner.components.health.currenthealth >=
         inst.peridic_heal_amount) and
       (owner.components.hunger and
         owner.components.hunger.current > inst.peridic_heal_amount * inst.heal_hunger_rate)
-   then
+  then
     owner.components.health:DoDelta(inst.peridic_heal_amount)
     owner.components.hunger:DoDelta(-inst.peridic_heal_amount * inst.heal_hunger_rate)
   end
@@ -533,10 +533,10 @@ end
 
 local function calcHealthDrain(inst, attacker, target)
   return (inst.components.weapon.damage + attacker.components.combat.defaultdamage) *
-    -- target.components.combat.defaultdamage * 0.05) *
-    -- (target:HasTag("epic") and 1.2 or 0.6) *
-    (attacker.components.health:GetPercent() < 0.2 and 1.5 or 1) *
-    inst.health_steel_ratio
+      -- target.components.combat.defaultdamage * 0.05) *
+      -- (target:HasTag("epic") and 1.2 or 0.6) *
+      (attacker.components.health:GetPercent() < 0.2 and 1.5 or 1) *
+      inst.health_steel_ratio
 end
 
 local function onattack(inst, attacker, target) -- inst, attacker, target, skipsanity
@@ -567,7 +567,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
 
       for _, other_player in ipairs(AllPlayers) do
         if
-          other_player and other_player:IsValid() and other_player ~= attacker and
+            other_player and other_player:IsValid() and other_player ~= attacker and
             not other_player:HasTag("playerghost") and
             attacker.components.sanity.current > inst.shadow_healing_cost and
             attacker.components.hunger.current > inst.shadow_healing_cost and
@@ -580,7 +580,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
               other_player.components.health.currenthealth < 100) and
             not other_player.components.health:IsDead() and
             attacker:GetDistanceSqToInst(other_player) < 1200
-         then
+        then
           shadow_healing_casted_count = shadow_healing_casted_count + 1
           ---@diagnostic disable-next-line: redundant-parameter
           attacker.components.talker:Say("吸血鬼的拥抱！")
@@ -593,17 +593,17 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
           )
 
           local HOT =
-            attacker:DoPeriodicTask(
-            0.1,
-            function()
-              pcall(
+              attacker:DoPeriodicTask(
+                0.1,
                 function()
-                  other_player.components.health:DoDelta(inst.shadow_healing_amount, true)
-                  attacker.components.health:DoDelta(inst.shadow_healing_amount * 0.25, true)
+                  pcall(
+                    function()
+                      other_player.components.health:DoDelta(inst.shadow_healing_amount, true)
+                      attacker.components.health:DoDelta(inst.shadow_healing_amount * 0.25, true)
+                    end
+                  )
                 end
               )
-            end
-          )
 
           attacker:DoTaskInTime(
             1,
@@ -616,19 +616,19 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
 
       if shadow_healing_casted_count > 0 then
         local DOT =
-          attacker:DoPeriodicTask(
-          0.1,
-          function()
-            pcall(
+            attacker:DoPeriodicTask(
+              0.1,
               function()
-                target.components.health:DoDelta(
-                  -inst.shadow_healing_amount * shadow_healing_casted_count,
-                  true
+                pcall(
+                  function()
+                    target.components.health:DoDelta(
+                      -inst.shadow_healing_amount * shadow_healing_casted_count,
+                      true
+                    )
+                  end
                 )
               end
             )
-          end
-        )
         attacker:DoTaskInTime(
           1,
           function()
@@ -650,22 +650,22 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
 
       local x, y, z = target.Transform:GetWorldPosition()
       local ents =
-        TheSim:FindEntities(
-        x,
-        y,
-        z,
-        inst.storm_range,
-        {"_combat", "_health"},
-        {
-          "FX",
-          "INLIMBO",
-          "NOCLICK"
-        }
-      )
+          TheSim:FindEntities(
+            x,
+            y,
+            z,
+            inst.storm_range,
+            { "_combat", "_health" },
+            {
+              "FX",
+              "INLIMBO",
+              "NOCLICK"
+            }
+          )
 
       for _, v in pairs(ents) do
         if
-          v ~= target and v:IsValid() and not v:IsInLimbo() and v.components.combat and
+            v ~= target and v:IsValid() and not v:IsInLimbo() and v.components.combat and
             v.components.health and
             not v.components.health:IsDead() and
             attacker.components.combat:IsValidTarget(v) and
@@ -674,7 +674,7 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
             not v:HasTag("wall") and
             string.find(v.prefab, "wall") == nil and
             string.find(v.prefab, "fence") == nil
-         then
+        then
           stormHitCount = stormHitCount + 1
 
           SpawnPrefab("explode_reskin").Transform:SetPosition(v.Transform:GetWorldPosition())
@@ -699,10 +699,10 @@ local function onattack(inst, attacker, target) -- inst, attacker, target, skips
             end
           )
 
-        -- if math.random(0, 100) > 80 then
-        --   attacker.components.hunger:DoDelta(1)
-        --   attacker.components.sanity:DoDelta(1)
-        -- end
+          -- if math.random(0, 100) > 80 then
+          --   attacker.components.hunger:DoDelta(1)
+          --   attacker.components.sanity:DoDelta(1)
+          -- end
         end
       end
 
@@ -772,9 +772,9 @@ local function ReportLevel(inst, player, extra)
 
   player.components.talker:Say(
     "等级:   " ..
-      inst.level:value() ..
-        "\n经验: " ..
-          string.format("%.0f", inst.exp) .. " / " .. LevelUpTable[inst.level:value() + 1] .. extra
+    inst.level:value() ..
+    "\n经验: " ..
+    string.format("%.0f", inst.exp) .. " / " .. LevelUpTable[inst.level:value() + 1] .. extra
   )
 end
 
@@ -897,9 +897,9 @@ local function OnGetItemFromPlayer(inst, giver, item)
   if giver ~= nil and item ~= nil then
     local OtherItems = giver.components.inventory:GetActiveItem()
     if
-      OtherItems and OtherItems.prefab == item.prefab and OtherItems.components.stackable ~= nil and
+        OtherItems and OtherItems.prefab == item.prefab and OtherItems.components.stackable ~= nil and
         OtherItems.components.stackable.stacksize >= 1
-     then
+    then
       inst.components.trader:AcceptGift(giver, OtherItems, 1)
     end
   end
@@ -1004,56 +1004,56 @@ local function DisplayNameFx(inst)
   local name_with_lv = inst.name .. "  Lv: " .. lv
 
   local slowing =
-    "\n攻击减速: " ..
-    string.format("%.0f", props.slowing_rate * 100) ..
+      "\n攻击减速: " ..
+      string.format("%.0f", props.slowing_rate * 100) ..
       "% (持续: " .. string.format("%.1f", props.slowing_duration) .. "秒)"
   local pick_range = "\n懒人拾取范围: " .. string.format("%.1f", props.pick_up_range)
 
   local life_regen =
-    "\n生命回复: " ..
-    string.format("%.1f", props.peridic_heal_amount) ..
+      "\n生命回复: " ..
+      string.format("%.1f", props.peridic_heal_amount) ..
       "/" ..
-        string.format("%.1f", props.peridic_heal_cd) ..
-          "秒 (饥饿消耗 1:" .. string.format("%.2f", props.heal_hunger_rate) .. ")"
+      string.format("%.1f", props.peridic_heal_cd) ..
+      "秒 (饥饿消耗 1:" .. string.format("%.2f", props.heal_hunger_rate) .. ")"
   local life_steel = "\n吸血: " .. string.format("%.1f", props.health_steel_ratio * 100) .. "%"
 
   -- local light_desc = "照明范围: " .. string.format("%.0f", props.light_radius)
 
   local storm =
-    "\n" ..
-    string.format("%.0f", props.storm_chance) ..
+      "\n" ..
+      string.format("%.0f", props.storm_chance) ..
       "% 几率触发风暴，对范围 " ..
-        string.format("%.1f", props.storm_range) ..
-          " 敌人造成 " .. string.format("%.0f", props.storm_damage_ratio * 100) .. "% 伤害"
+      string.format("%.1f", props.storm_range) ..
+      " 敌人造成 " .. string.format("%.0f", props.storm_damage_ratio * 100) .. "% 伤害"
 
   local spike =
-    "\n" ..
-    string.format("%.0f", props.spike_chance) ..
+      "\n" ..
+      string.format("%.0f", props.spike_chance) ..
       "% 几率生成 " ..
-        props.spike_amount_lower ..
-          "~" ..
-            props.spike_amount_upper ..
-              " 根地刺，延迟 " ..
-                string.format("%.1f", props.spike_latency) ..
-                  " 秒后，每根对范围 " ..
-                    string.format("%.1f", props.spike_radius) ..
-                      " 敌人造成 " .. string.format("%.0f", props.spike_damage) .. " 伤害"
+      props.spike_amount_lower ..
+      "~" ..
+      props.spike_amount_upper ..
+      " 根地刺，延迟 " ..
+      string.format("%.1f", props.spike_latency) ..
+      " 秒后，每根对范围 " ..
+      string.format("%.1f", props.spike_radius) ..
+      " 敌人造成 " .. string.format("%.0f", props.spike_damage) .. " 伤害"
 
   local summon =
-    props.summon_amount > 0 and
-    ("\n召唤最多 " ..
-      props.summon_amount ..
+      props.summon_amount > 0 and
+      ("\n召唤最多 " ..
+        props.summon_amount ..
         " 个动物伙伴 (伙伴获得 " ..
-          string.format("%.0f", props.summon_health_addition) ..
-            " 额外生命、" ..
-              string.format("%.0f", props.summon_damage_addition) ..
-                " 额外伤害和 " ..
-                  string.format("%.0f", props.summon_extra_armor * 100) ..
-                    "% 伤害吸收)，复活CD " .. string.format("%.0f", props.summon_cd) .. " 秒") or
-    ""
+        string.format("%.0f", props.summon_health_addition) ..
+        " 额外生命、" ..
+        string.format("%.0f", props.summon_damage_addition) ..
+        " 额外伤害和 " ..
+        string.format("%.0f", props.summon_extra_armor * 100) ..
+        "% 伤害吸收)，复活CD " .. string.format("%.0f", props.summon_cd) .. " 秒") or
+      ""
 
   return name_with_lv ..
-    slowing .. pick_range .. life_steel .. life_regen .. storm .. spike .. summon
+      slowing .. pick_range .. life_steel .. life_regen .. storm .. spike .. summon
 end
 
 local function fn()

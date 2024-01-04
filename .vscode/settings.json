@@ -129,7 +129,10 @@
         "shuffleArray",
         "PI",
         "AddModRPCHandler",
-        "KEY_END"
+        "KEY_END",
+        "Recipe",
+        "RECIPETABS",
+        "TECH"
     ],
     "lua.targetVersion": "5.1",
     "search.exclude": {
@@ -140,5 +143,20 @@
     },
     "Lua.diagnostics.disable": [
         // "undefined-global"
+    ],
+    "cSpell.words": [
+        "ARMORMARBLE",
+        "ARMORRUINS",
+        "inventoryimages",
+        "moonspider",
+        "NOTDAY",
+        "ORANGESTAFF",
+        "playerlight",
+        "RECIPETABS",
+        "RUINSHAT",
+        "senhai",
+        "TORNADOSTAFF",
+        "WICKERBOTTOM",
+        "YELLOWSTAFF"
     ]
 }

@@ -18,18 +18,18 @@ local function shouldhit(inst, target)
 
   -- other player's and their followers
   if
-    not TheNet:GetPVPEnabled() and
+      not TheNet:GetPVPEnabled() and
       (target:HasTag("player") or
         (target.components.follower ~= nil and target.components.follower.leader ~= nil and
           target.components.follower.leader:HasTag("player")))
-   then
+  then
     return false
   end
 
   return true
 end
 
-local RETARGET_MUST_TAGS = {"_combat"}
+local RETARGET_MUST_TAGS = { "_combat" }
 local RETARGET_CANT_TAGS = {
   "flying",
   "shadow",
@@ -54,14 +54,14 @@ local function DoAttack(inst)
     TheSim:FindEntities(x, y, z, inst.attack_radius + 3, RETARGET_MUST_TAGS, RETARGET_CANT_TAGS)
   ) do
     if
-      v:IsValid() and not v:IsInLimbo() and v.components.combat and
+        v:IsValid() and not v:IsInLimbo() and v.components.combat and
         not (v.components.health ~= nil and v.components.health:IsDead()) and
         (v:HasTag("monster") or v.components.combat.target == attacker) and
         not v:HasTag("wall") and
         string.find(v.prefab, "wall") == nil and
         string.find(v.prefab, "fence") == nil and
         shouldhit(inst, v)
-     then
+    then
       local range = inst.attack_radius + v:GetPhysicsRadius(.5)
       if v:GetDistanceSqToPoint(x, y, z) < range * range and inst.components.combat:CanTarget(v) then
         -- attacker.components.combat:DoAttack(v)
@@ -114,12 +114,12 @@ local function StartAttack(inst)
   inst.AnimState:PlayAnimation("spike_pre")
   inst.SoundEmitter:PlaySoundWithParams(
     "turnoftides/creatures/together/spider_moon/spike",
-    {intensity = math.random()}
+    { intensity = math.random() }
   )
   inst.AnimState:PushAnimation("spike_loop")
 
   inst.lifespan_task =
-    inst:DoTaskInTime((inst.latency or 2) * math.random(400, 600) / 1000, KillSpike)
+      inst:DoTaskInTime((inst.latency or 2) * math.random(400, 600) / 1000, KillSpike)
 
   DoAttack(inst)
 end
