@@ -838,7 +838,7 @@ end
 -- 吃掉物品升级
 -- 会根据等级重新计算属性
 local function OnGetItemFromPlayer(inst, giver, item)
-  local has_level_up = false
+  -- local has_level_up = false
   if item and item.prefab ~= nil then
     local old_level = inst.level:value()
 
@@ -950,13 +950,13 @@ local function OnGetItemFromPlayer(inst, giver, item)
     properties.light_radius
   )
 
-  if has_level_up and inst.components.inventoryitem then
-    local owner = inst.components.inventoryitem:GetGrandOwner()
-    if owner then
-      killPeriodTasks(inst)
-      runPeriodTasks(inst, owner)
-    end
-  end
+  -- if has_level_up and inst.components.inventoryitem then
+  --   local owner = inst.components.inventoryitem:GetGrandOwner()
+  --   if owner then
+  --     killPeriodTasks(inst)
+  --     runPeriodTasks(inst, owner)
+  --   end
+  -- end
 
   if giver ~= nil and item ~= nil then
     local OtherItems = giver.components.inventory:GetActiveItem()
@@ -978,6 +978,7 @@ local function onEquip(inst, owner) --装备
   owner.AnimState:OverrideSymbol("swap_object", "swap_senhai", "swap_senhai")
   owner.AnimState:Show("ARM_carry")
   owner.AnimState:Hide("ARM_normal")
+
   runPeriodTasks(inst, owner)
 end
 

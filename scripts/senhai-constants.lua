@@ -371,7 +371,7 @@ local Constants = {
     moonrockidol = true,
     blueprint = true,
     tacklecontainer = true,
-    supertacklecontainer = true
+    supertacklecontainer = true,
   },
   PickUpForbidPattern = {
     "staff",
